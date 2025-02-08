@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>benqxc - Программист JS & Python</title>
+    <style>
+        /* общие стили */
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: #1e1e2f; /* темный фон */
+            color: #ffffff; /* белый текст */
+            line-height: 1.6;
+        }
+
+        /* контейнер для контента */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* заголовок сайта */
+        header {
+            text-align: center;
+            padding: 60px 0;
+            background: linear-gradient(135deg, #6a11cb, #2575fc); /* градиентный фон */
+            color: white;
+            border-radius: 0 0 20px 20px;
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin: 0;
+        }
+
+        header p {
+            font-size: 1.2em;
+            margin: 10px 0 0;
+        }
+
+        /* секции */
+        section {
+            margin: 40px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1); /* полупрозрачный фон */
+            border-radius: 10px;
+            backdrop-filter: blur(10px); /* размытие */
+        }
+
+        section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #6a11cb; /* фиолетовый цвет */
+        }
+
+        /* карточки проектов */
+        .projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .project-card h3 {
+            font-size: 1.5em;
+            margin: 0 0 10px;
+        }
+
+        .project-card p {
+            margin: 0;
+        }
+
+        /* кнопки */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #6a11cb;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #2575fc;
+        }
+
+        /* футер */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-top: 40px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        footer a {
+            color: #6a11cb;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- шапка сайта -->
+    <header>
+        <div class="container">
+            <h1>benqxc</h1>
+            <p>Программист JavaScript & Python</p>
+        </div>
+    </header>
+
+    <!-- основное содержимое -->
+    <div class="container">
+        <!-- секция "О себе" -->
+        <section>
+            <h2>О себе</h2>
+            <p>
+                Привет! Меня зовут benqxc, и я занимаюсь разработкой на JavaScript и Python. 
+                Я создаю современные веб-приложения, автоматизирую задачи и разрабатываю 
+                интересные проекты. В свободное время люблю изучать новые технологии и 
+                улучшать свои навыки.
+            </p>
+        </section>
+
+        <!-- секция "Навыки" -->
+        <section>
+            <h2>Навыки</h2>
+            <ul>
+                <li>JavaScript (ES6+, Node.js, React)</li>
+                <li>Python (Django, Flask, NumPy, Pandas)</li>
+                <li>HTML5, CSS3 (включая Flexbox и Grid)</li>
+                <li>Работа с базами данных (SQL, MongoDB)</li>
+                <li>Git и системы контроля версий</li>
+                <li>Docker и DevOps-практики</li>
+            </ul>
+        </section>
+
+        <!-- секция "Проекты" -->
+        <section>
+            <h2>Проекты</h2>
+            <div class="projects">
+                <!-- карточка проекта 1 -->
+                <div class="project-card">
+                    <h3>Веб-приложение для управления задачами</h3>
+                    <p>
+                        Приложение для создания и управления задачами, написанное на React и Node.js. 
+                        Включает аутентификацию пользователей и работу с базой данных MongoDB.
+                    </p>
+                    <a href="#" class="btn">Подробнее</a>
+                </div>
+
+                <!-- карточка проекта 2 -->
+                <div class="project-card">
+                    <h3>Автоматизация отчетов на Python</h3>
+                    <p>
+                        Скрипт для автоматического сбора данных и генерации отчетов с использованием 
+                        библиотек Pandas и NumPy. Интеграция с Google Sheets.
+                    </p>
+                    <a href="#" class="btn">Подробнее</a>
+                </div>
+
+                <!-- карточка проекта 3 -->
+                <div class="project-card">
+                    <h3>Чат-бот для Telegram</h3>
+                    <p>
+                        Чат-бот для Telegram, написанный на Python с использованием библиотеки aiogram. 
+                        Бот предоставляет информацию о погоде, курсах валют и новостях.
+                    </p>
+                    <a href="#" class="btn">Подробнее</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- секция "Контакты" -->
+        <section>
+            <h2>Контакты</h2>
+            <p>
+                Если у вас есть вопросы или предложения, свяжитесь со мной:
+            </p>
+            <ul>
+                <li>Email: <a href="mailto:benqxc@example.com">benqxc@example.com</a></li>
+                <li>GitHub: <a href="https://github.com/benqxc" target="_blank">github.com/benqxc</a></li>
+                <li>Telegram: <a href="https://t.me/benqxc" target="_blank">@benqxc</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <!-- футер -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 benqxc. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>
