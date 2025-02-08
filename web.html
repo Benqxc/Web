@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,81 +9,68 @@
         body {
             margin: 0;
             font-family: 'Arial', sans-serif;
-            background: #1e1e2f; /* темный фон */
-            color: #ffffff; /* белый текст */
+            background: #1e1e2f;
+            color: #ffffff;
             line-height: 1.6;
         }
 
-        /* контейнер для контента */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        /* заголовок сайта */
         header {
             text-align: center;
             padding: 60px 0;
-            background: linear-gradient(135deg, #6a11cb, #2575fc); /* градиентный фон */
+            background: url('https://gifdb.com/images/high/ken-kaneki-evil-eyes-open-vvo9l8ag1f2p737c.gif') center/cover no-repeat;
             color: white;
             border-radius: 0 0 20px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
         }
 
         header h1 {
             font-size: 3em;
             margin: 0;
+            position: relative;
+            z-index: 2;
+            color: #ffffff;
         }
 
         header p {
             font-size: 1.2em;
             margin: 10px 0 0;
+            position: relative;
+            z-index: 2;
+            color: #ffffff;
         }
 
-        /* секции */
         section {
             margin: 40px 0;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1); /* полупрозрачный фон */
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            backdrop-filter: blur(10px); /* размытие */
+            backdrop-filter: blur(10px);
         }
 
         section h2 {
             font-size: 2em;
             margin-bottom: 20px;
-            color: #6a11cb; /* фиолетовый цвет */
+            color: #6a11cb;
         }
 
-        /* карточки проектов */
-        .projects {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .project-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .project-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .project-card h3 {
-            font-size: 1.5em;
-            margin: 0 0 10px;
-        }
-
-        .project-card p {
-            margin: 0;
-        }
-
-        /* кнопки */
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -98,7 +85,6 @@
             background: #2575fc;
         }
 
-        /* футер */
         footer {
             text-align: center;
             padding: 20px;
@@ -115,10 +101,28 @@
         footer a:hover {
             text-decoration: underline;
         }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #6a11cb;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #2575fc;
+        }
     </style>
 </head>
 <body>
-    <!-- шапка сайта -->
     <header>
         <div class="container">
             <h1>benqxc</h1>
@@ -126,9 +130,7 @@
         </div>
     </header>
 
-    <!-- основное содержимое -->
     <div class="container">
-        <!-- секция "О себе" -->
         <section>
             <h2>О себе</h2>
             <p>
@@ -139,7 +141,6 @@
             </p>
         </section>
 
-        <!-- секция "Навыки" -->
         <section>
             <h2>Навыки</h2>
             <ul>
@@ -152,43 +153,6 @@
             </ul>
         </section>
 
-        <!-- секция "Проекты" -->
-        <section>
-            <h2>Проекты</h2>
-            <div class="projects">
-                <!-- карточка проекта 1 -->
-                <div class="project-card">
-                    <h3>Веб-приложение для управления задачами</h3>
-                    <p>
-                        Приложение для создания и управления задачами, написанное на React и Node.js. 
-                        Включает аутентификацию пользователей и работу с базой данных MongoDB.
-                    </p>
-                    <a href="#" class="btn">Подробнее</a>
-                </div>
-
-                <!-- карточка проекта 2 -->
-                <div class="project-card">
-                    <h3>Автоматизация отчетов на Python</h3>
-                    <p>
-                        Скрипт для автоматического сбора данных и генерации отчетов с использованием 
-                        библиотек Pandas и NumPy. Интеграция с Google Sheets.
-                    </p>
-                    <a href="#" class="btn">Подробнее</a>
-                </div>
-
-                <!-- карточка проекта 3 -->
-                <div class="project-card">
-                    <h3>Чат-бот для Telegram</h3>
-                    <p>
-                        Чат-бот для Telegram, написанный на Python с использованием библиотеки aiogram. 
-                        Бот предоставляет информацию о погоде, курсах валют и новостях.
-                    </p>
-                    <a href="#" class="btn">Подробнее</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- секция "Контакты" -->
         <section>
             <h2>Контакты</h2>
             <p>
@@ -196,13 +160,26 @@
             </p>
             <ul>
                 <li>Email: <a href="mailto:benqxc@example.com">benqxc@example.com</a></li>
-                <li>GitHub: <a href="https://github.com/benqxc" target="_blank">github.com/benqxc</a></li>
-                <li>Telegram: <a href="https://t.me/benqxc" target="_blank">@benqxc</a></li>
+                <li>GitHub: <a href="https://github.com/benqxc" target="_blank" rel="noopener noreferrer">github.com/benqxc</a></li>
+                <li>Telegram: <a href="https://t.me/benqxc" target="_blank" rel="noopener noreferrer">@benqxc</a></li>
             </ul>
+        </section>
+
+        <section>
+            <h2>Как захостить этот сайт</h2>
+            <p>Вот пошаговая инструкция для хостинга на GitHub Pages:</p>
+            <ol>
+                <li>Создайте новый репозиторий на GitHub с именем username.github.io (где username - ваше имя пользователя на GitHub)</li>
+                <li>Загрузите файл index.html и все связанные файлы в репозиторий</li>
+                <li>Перейдите в настройки репозитория (Settings)</li>
+                <li>Прокрутите вниз до раздела "GitHub Pages"</li>
+                <li>В разделе "Source" выберите ветку main</li>
+                <li>Сохраните изменения</li>
+            </ol>
+            <p>После этого ваш сайт будет доступен по адресу: https://username.github.io</p>
         </section>
     </div>
 
-    <!-- футер -->
     <footer>
         <div class="container">
             <p>&copy; 2023 benqxc. Все права защищены.</p>
