@@ -1,213 +1,217 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Личный сайт программиста benqxc, специализирующегося на JavaScript и Python.">
-    <meta name="keywords" content="JavaScript, Python, веб-разработка, программист, benqxc">
-    <meta name="author" content="benqxc">
-    <link rel="icon" href="path/to/favicon.ico" type="image/x-icon">
-    <title>benqxc - Программист JS & Python</title>
-    <style>
-        /* общие стили */
-        body {
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            background: #1e1e2f;
-            color: #ffffff;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            text-align: center;
-            padding: 60px 0;
-            background: url('https://gifdb.com/images/high/ken-kaneki-evil-eyes-open-vvo9l8ag1f2p737c.gif') center/cover no-repeat;
-            color: white;
-            border-radius: 0 0 20px 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1;
-        }
-
-        header h1 {
-            font-size: 3em;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-            color: #ffffff;
-        }
-
-        header p {
-            font-size: 1.2em;
-            margin: 10px 0 0;
-            position: relative;
-            z-index: 2;
-            color: #ffffff;
-        }
-
-        section {
-            margin: 40px 0;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        section h2 {
-            font-size: 2em;
-            margin-bottom: 20px;
-            color: #6a11cb;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #6a11cb;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background: #2575fc;
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            margin-top: 40px;
-            border-radius: 10px 10px 0 0;
-        }
-
-        footer a {
-            color: #6a11cb;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        ul li {
-            margin-bottom: 10px;
-        }
-
-        a {
-            color: #6a11cb;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        a:hover {
-            color: #2575fc;
-        }
-
-        /* Кнопка "Наверх" */
-        .scroll-to-top {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #6a11cb;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 15px;
-            cursor: pointer;
-            display: none; /* Скрыть по умолчанию */
-        }
-
-        .scroll-to-top:hover {
-            background: #2575fc;
-        }
-    </style>
-</head>
+<html>
 <body>
-    <header>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Личный сайт программиста benqxc, специализирующегося на JavaScript и Python.">
+        <meta name="keywords" content="JavaScript, Python, веб-разработка, программист, benqxc">
+        <meta name="author" content="benqxc">
+        <link rel="icon" href="path/to/favicon.ico" type="image/x-icon">
+        <title>benqxc - Программист JS & Python</title>
+        <style>
+            /* общие стили */
+            body {
+                margin: 0;
+                font-family: 'Arial', sans-serif;
+                background: #1e1e2f;
+                color: #ffffff;
+                line-height: 1.6;
+            }
+    
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+    
+            header {
+                text-align: center;
+                padding: 60px 0;
+                background: url('https://gifdb.com/images/high/ken-kaneki-evil-eyes-open-vvo9l8ag1f2p737c.gif') center/cover no-repeat;
+                color: white;
+                border-radius: 0 0 20px 20px;
+                position: relative;
+                overflow: hidden;
+            }
+    
+            header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1;
+            }
+    
+            header h1 {
+                font-size: 3em;
+                margin: 0;
+                position: relative;
+                z-index: 2;
+                color: #ffffff;
+            }
+    
+            header p {
+                font-size: 1.2em;
+                margin: 10px 0 0;
+                position: relative;
+                z-index: 2;
+                color: #ffffff;
+            }
+    
+            section {
+                margin: 40px 0;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+    
+            section h2 {
+                font-size: 2em;
+                margin-bottom: 20px;
+                color: #6a11cb;
+            }
+    
+            .btn {
+                display: inline-block;
+                padding: 10px 20px;
+                background: #6a11cb;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                transition: background 0.3s;
+            }
+    
+            .btn:hover {
+                background: #2575fc;
+            }
+    
+            footer {
+                text-align: center;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.1);
+                margin-top: 40px;
+                border-radius: 10px 10px 0 0;
+            }
+    
+            footer a {
+                color: #6a11cb;
+                text-decoration: none;
+            }
+    
+            footer a:hover {
+                text-decoration: underline;
+            }
+    
+            ul {
+                list-style-type: none;
+                padding: 0;
+            }
+    
+            ul li {
+                margin-bottom: 10px;
+            }
+    
+            a {
+                color: #6a11cb;
+                text-decoration: none;
+                transition: color 0.3s;
+            }
+    
+            a:hover {
+                color: #2575fc;
+            }
+    
+            /* Кнопка "Наверх" */
+            .scroll-to-top {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #6a11cb;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px 15px;
+                cursor: pointer;
+                display: none; /* Скрыть по умолчанию */
+            }
+    
+            .scroll-to-top:hover {
+                background: #2575fc;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="container">
+                <h1>benqxc</h1>
+                <p>Программист JavaScript & Python</p>
+            </div>
+        </header>
+    
         <div class="container">
-            <h1>benqxc</h1>
-            <p>Программист JavaScript & Python</p>
-        </div>
-    </header>
-
-    <div class="container">
-        <section>
-            <h2>О себе</h2>
-            <p>
-                Привет! Меня зовут benqxc, и я занимаюсь разработкой на JavaScript и Python. 
-                Я создаю современные веб-приложения, автоматизирую задачи и разрабатываю 
-                интересные проекты. В свободное время люблю изучать новые технологии и 
-                улучшать свои навыки.
-            </p>
-        </section>
-
-        <section>
-            <h2>Навыки</h2>
-            <ul>
-                <li>JavaScript (ES6+, Node.js, React)</li>
-                <li>Python (Django, Flask, NumPy, Pandas)</li>
-                <li>HTML5, CSS3 (включая Flexbox и Grid)</li>
-                <li>Работа с базами данных (SQL, MongoDB)</li>
-                <li>Git и системы контроля версий</li>
-                <li>Docker и DevOps-практики</li>
-            </ul>
-        </section>
-
-        <section>
-            <h2>Проекты</h2>
-            <ul>
-                <li><a href="https://example.com/project1" target="_blank" rel="noopener noreferrer">Проект 1</a> - Краткое описание проекта.</li>
-                <li><a href="https://example.com/project2" target="_blank" rel="noopener noreferrer">Проект 2</a> - Краткое описание проекта.</li>
-                <li><a href="https://example.com/project3" target="_blank" rel="noopener noreferrer">Проект 3</a> - Краткое описание проекта.</li>
-            </ul>
-        </section>
-
-        <section>
-            <h2>Контакты</h2>
-            <p>
-                Если у вас есть вопросы или предложения, свяжитесь со мной:
-            </p>
-            <ul>
-                <li>Email: <a href="mailto:benqxc@example.com">benqxc@example.com</a></li>
-                <li>GitHub: <a href="https://github.com/benqxc" target="_blank" rel="noopener noreferrer">github.com/benqxc</a></li>
-                <li>Telegram: <a href="https://t.me/benqxc" target="_blank" rel="noopener noreferrer">@benqxc</a></li>
-                <li>LinkedIn: <a href="https://linkedin.com/in/benqxc" target="_blank" rel="noopener noreferrer">linkedin.com/in/benqxc</a></li>
-                <li>Twitter: <a href="https://twitter.com/benqxc" target="_blank" rel="noopener noreferrer">@benqxc</a></li>
-            </ul>
-        </section>
-
-        <section>
-            <h2>Как захостить этот сайт</h2>
-            <p>Вот пошаговая инструкция для хостинга на GitHub Pages:</p>
-            <ol>
-                <li>Создайте новый репозиторий на GitHub с именем username.github.io (где username - ваше имя пользователя на GitHub)</li>
-                <li>Загрузите файл index.html и все связанные файлы в репозиторий</li>
-                <li>Перейдите в настройки репозитория (Settings)</li>
-                <li>Прокрутите вниз до раздела "GitHub Pages"</li>
-                <li>В разделе "Source" выберите ветку main</li>
-                <li>Сохраните изменения</li>
-            </ol>
-            <p>После этого ваш сайт будет доступен по адресу: https://username.github.io</p>
-            <p>Для более подробной информации, посетите
+            <section>
+                <h2>О себе</h2>
+                <p>
+                    Привет! Меня зовут benqxc, и я занимаюсь разработкой на JavaScript и Python. 
+                    Я создаю современные веб-приложения, автоматизирую задачи и разрабатываю 
+                    интересные проекты. В свободное время люблю изучать новые технологии и 
+                    улучшать свои навыки.
+                </p>
+            </section>
+    
+            <section>
+                <h2>Навыки</h2>
+                <ul>
+                    <li>JavaScript (ES6+, Node.js, React)</li>
+                    <li>Python (Django, Flask, NumPy, Pandas)</li>
+                    <li>HTML5, CSS3 (включая Flexbox и Grid)</li>
+                    <li>Работа с базами данных (SQL, MongoDB)</li>
+                    <li>Git и системы контроля версий</li>
+                    <li>Docker и DevOps-практики</li>
+                </ul>
+            </section>
+    
+            <section>
+                <h2>Проекты</h2>
+                <ul>
+                    <li><a href="https://example.com/project1" target="_blank" rel="noopener noreferrer">Проект 1</a> - Краткое описание проекта.</li>
+                    <li><a href="https://example.com/project2" target="_blank" rel="noopener noreferrer">Проект 2</a> - Краткое описание проекта.</li>
+                    <li><a href="https://example.com/project3" target="_blank" rel="noopener noreferrer">Проект 3</a> - Краткое описание проекта.</li>
+                </ul>
+            </section>
+    
+            <section>
+                <h2>Контакты</h2>
+                <p>
+                    Если у вас есть вопросы или предложения, свяжитесь со мной:
+                </p>
+                <ul>
+                    <li>Email: <a href="mailto:benqxc@example.com">benqxc@example.com</a></li>
+                    <li>GitHub: <a href="https://github.com/benqxc" target="_blank" rel="noopener noreferrer">github.com/benqxc</a></li>
+                    <li>Telegram: <a href="https://t.me/benqxc" target="_blank" rel="noopener noreferrer">@benqxc</a></li>
+                    <li>LinkedIn: <a href="https://linkedin.com/in/benqxc" target="_blank" rel="noopener noreferrer">linkedin.com/in/benqxc</a></li>
+                    <li>Twitter: <a href="https://twitter.com/benqxc" target="_blank" rel="noopener noreferrer">@benqxc</a></li>
+                </ul>
+            </section>
+    
+            <section>
+                <h2>Как захостить этот сайт</h2>
+                <p>Вот пошаговая инструкция для хостинга на GitHub Pages:</p>
+                <ol>
+                    <li>Создайте новый репозиторий на GitHub с именем username.github.io (где username - ваше имя пользователя на GitHub)</li>
+                    <li>Загрузите файл index.html и все связанные файлы в репозиторий</li>
+                    <li>Перейдите в настройки репозитория (Settings)</li>
+                    <li>Прокрутите вниз до раздела "GitHub Pages"</li>
+                    <li>В разделе "Source" выберите ветку main</li>
+                    <li>Сохраните изменения</li>
+                </ol>
+                <p>После этого ваш сайт будет доступен по адресу: https://username.github.io</p>
+                <p>Для более подробной информации, посетите
+</body>
+</html>
