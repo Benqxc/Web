@@ -12,70 +12,75 @@
         /* общие стили */
         body {
             margin: 0;
-            font-family: 'Arial', sans-serif;
-            color: #ffffff;
+            font-family: 'Courier New', monospace; /* Шрифт в стиле хакера */
+            color: #00ff00; /* Зеленый цвет текста */
             line-height: 1.6;
             background: url('https://developer.valvesoftware.com/w/images/2/26/1920x1080-SymbolFall.gif') center/cover no-repeat fixed; /* Добавлен фон */
+            overflow: hidden; /* Скрыть прокрутку */
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background: rgba(30, 30, 47, 0.8); /* Полупрозрачный фон для контейнера */
+            background: rgba(0, 0, 0, 0.8); /* Темный полупрозрачный фон для контейнера */
             border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); /* Эффект свечения */
         }
 
         header {
             text-align: center;
             padding: 60px 0;
-            color: white;
+            color: #00ff00;
             border-radius: 0 0 20px 20px;
             position: relative;
             overflow: hidden;
         }
 
         header h1 {
-            font-size: 3em;
+            font-size: 3.5em; /* Увеличенный размер заголовка */
             margin: 0;
-            color: #ffffff;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.8); /* Эффект свечения */
         }
 
         header p {
-            font-size: 1.2em;
+            font-size: 1.5em; /* Увеличенный размер текста */
             margin: 10px 0 0;
-            color: #ffffff;
+            color: #00ff00;
         }
 
         section {
             margin: 40px 0;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.6); /* Темный фон для секций */
             border-radius: 10px;
             backdrop-filter: blur(10px);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); /* Эффект свечения */
         }
 
         section h2 {
-            font-size: 2em;
+            font-size: 2.5em; /* Увеличенный размер заголовка секции */
             margin-bottom: 20px;
-            color: #6a11cb;
+            color: #00ff00;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.8); /* Эффект свечения */
         }
 
         footer {
             text-align: center;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.6);
             margin-top: 40px;
             border-radius: 10px 10px 0 0;
         }
 
         footer a {
-            color: #6a11cb;
+            color: #00ff00;
             text-decoration: none;
         }
 
         footer a:hover {
             text-decoration: underline;
+            color: #ffcc00; /* Цвет при наведении */
         }
 
         ul {
@@ -88,13 +93,13 @@
         }
 
         a {
-            color: #6a11cb;
+            color: #00ff00;
             text-decoration: none;
             transition: color 0.3s;
         }
 
         a:hover {
-            color: #2575fc;
+            color: #ffcc00; /* Цвет при наведении */
         }
     </style>
 </head>
@@ -135,7 +140,7 @@
                 Если у вас есть вопросы или предложения, свяжитесь со мной:
             </p>
             <ul>
-                <li>Email: <a href="0benqxc0@gmail.com">0benqxc0@gmail.com</a></li>
+                <li>Email: <a href="mailto:0benqxc0@gmail.com">0benqxc0@gmail.com</a></li>
                 <li>GitHub: <a href="https://github.com/benqxc" target="_blank" rel="noopener noreferrer">github.com/benqxc</a></li>
                 <li>Telegram: <a href="https://t.me/benqxc" target="_blank" rel="noopener noreferrer">@benqxc</a></li>
             </ul>
