@@ -7,14 +7,46 @@
     <meta name="keywords" content="JavaScript, Python, веб-разработка, программист, benqxc">
     <meta name="author" content="benqxc">
     <link rel="icon" href="path/to/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <title>benqxc - Программист JS & Python</title>
     <style>
         body {
             margin: 0;
-            font-family: 'Courier New', monospace;
+            font-family: 'Roboto', sans-serif;
             color: #00ff00;
             line-height: 1.6;
             background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), url('https://developer.valvesoftware.com/w/images/2/26/1920x1080-SymbolFall.gif') center/cover no-repeat fixed;
+        }
+
+        nav {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav a {
+            color: #00ff00;
+            text-decoration: none;
+            font-weight: 700;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ffcc00;
         }
 
         .container {
@@ -25,6 +57,7 @@
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
             transition: transform 0.3s;
+            margin-top: 60px; /* Отступ для навигации */
         }
 
         .container:hover {
@@ -74,7 +107,7 @@
         }
 
         footer {
-            text-align: center;
+ text-align: center;
             padding: 20px;
             background: rgba(0, 0, 0, 0.6);
             margin-top: 40px;
@@ -122,9 +155,35 @@
                 transform: translateY(0);
             }
         }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 255, 0, 0.7);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: none;
+            transition: background 0.3s;
+        }
+
+        .back-to-top:hover {
+            background: #00ff00;
+        }
     </style>
 </head>
 <body>
+    <nav>
+        <ul>
+            <li><a href="#about">О себе</a></li>
+            <li><a href="#skills">Хакерские навыки</a></li>
+            <li><a href="#contacts">Контакты</a></li>
+        </ul>
+    </nav>
+
     <header>
         <div class="container">
             <h1>benqxc</h1>
@@ -133,7 +192,7 @@
     </header>
 
     <div class="container">
-        <section>
+        <section id="about">
             <h2>О себе</h2>
             <p>
                 Привет! Меня зовут benqxc, и я занимаюсь разработкой на JavaScript и Python. 
@@ -143,7 +202,7 @@
             </p>
         </section>
 
-        <section>
+        <section id="skills">
             <h2>Хакерские навыки</h2>
             <ul>
                 <li>DDoS-атаки и защита от них</li>
@@ -155,7 +214,7 @@
             </ul>
         </section>
 
-        <section>
+        <section id="contacts">
             <h2>Контакты</h2>
             <p>
                 Если у вас есть вопросы или предложения, свяжитесь со мной:
@@ -173,5 +232,22 @@
             <p>&copy; 2025 benqxc. Все права защищены.</p>
         </div>
     </footer>
+
+    <button class="back-to-top" onclick="scrollToTop()">Наверх</button>
+
+    <script>
+        window.onscroll = function() {
+            const button = document.querySelector('.back-to-top');
+            if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+                button.style.display = "block";
+            } else {
+                button.style.display = "none";
+            }
+        };
+
+        function scrollToTop() {
+            window.scrollTo({top: 0, behavior: ' smooth'});
+        }
+    </script>
 </body>
 </html>
