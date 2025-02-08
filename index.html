@@ -9,22 +9,27 @@
     <link rel="icon" href="path/to/favicon.ico" type="image/x-icon">
     <title>benqxc - Программист JS & Python</title>
     <style>
-        /* общие стили */
+        /* Общие стили */
         body {
             margin: 0;
             font-family: 'Courier New', monospace; /* Шрифт в стиле хакера */
             color: #00ff00; /* Зеленый цвет текста */
             line-height: 1.6;
-            background: url('https://developer.valvesoftware.com/w/images/2/26/1920x1080-SymbolFall.gif') center/cover no-repeat fixed; /* Добавлен фон */
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), url('https://developer.valvesoftware.com/w/images/2/26/1920x1080-SymbolFall.gif') center/cover no-repeat fixed; /* Градиентный фон */
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.8); /* Темный полупрозрачный фон для контейнера */
+            background: rgba(0, 0, 0, 0.7); /* Темный полупрозрачный фон для контейнера */
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); /* Эффект свечения */
+            transition: transform 0.3s; /* Анимация при наведении */
+        }
+
+        .container:hover {
+            transform: scale(1.02); /* Увеличение при наведении */
         }
 
         header {
@@ -55,6 +60,11 @@
             border-radius: 10px;
             backdrop-filter: blur(10px);
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); /* Эффект свечения */
+            transition: transform 0.3s; /* Анимация при наведении */
+        }
+
+        section:hover {
+            transform: scale(1.02); /* Увеличение при наведении */
         }
 
         section h2 {
@@ -99,6 +109,20 @@
 
         a:hover {
             color: #ffcc00; /* Цвет при наведении */
+        }
+
+        /* Анимация для появления секций */
+        section {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -148,7 +172,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2023 benqxc. Все права защищены.</p>
+            <p>&copy; 2025 benqxc. Все права защищены.</p>
         </div>
     </footer>
 </body>
