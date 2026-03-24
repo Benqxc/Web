@@ -172,26 +172,9 @@ document.addEventListener('mousemove', (e) => {
     stars3.style.transform = `translate(-${x * 40}px, -${y * 40}px)`;
 });
 
-// Эффект наклона карточки
-const card = document.querySelector('.profile-card');
-
-card.addEventListener('mousemove', (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    
-    const rotateX = (y - centerY) / 10;
-    const rotateY = (centerX - x) / 10;
-    
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-});
-
-card.addEventListener('mouseleave', () => {
-    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
-});
+// Эффект наклона карточки (отключён - слишком резкая анимация)
+// const card = document.querySelector('.profile-card');
+// card.addEventListener('mousemove', (e) => { ... });
 
 // Музыкальный контрол
 const musicBtn = document.getElementById('musicToggle');
@@ -268,9 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Загрузка счетчика просмотров
     loadViewCount();
-    
-    // Загрузка GitHub репозиториев
-    loadGitHubRepos();
     
     // Скрываем лоадер после загрузки
     window.addEventListener('load', hideLoader);
