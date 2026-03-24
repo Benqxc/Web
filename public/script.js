@@ -175,7 +175,7 @@ function createParticle(x, y) {
 
 // Анимация появления элементов
 document.addEventListener('DOMContentLoaded', () => {
-    const elements = document.querySelectorAll('.avatar, .username, .description, .badges, .social-links');
+    const elements = document.querySelectorAll('.avatar, .username, .description, .view-counter, .badges, .social-links');
     
     elements.forEach((el, index) => {
         el.style.opacity = '0';
@@ -187,4 +187,43 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.transform = 'translateY(0)';
         }, index * 100);
     });
+    
+    // Загрузка счетчика просмотров
+    loadViewCount();
 });
+
+// Загрузка счетчика просмотров
+async function loadViewCount() {
+    try {
+        const response = await fetch('/api/stats');
+        const stats = await response.json();
+        const viewCountEl = document.getElementById('viewCount');
+        if (viewCountEl) {
+            animateCounter(viewCountEl, 0, stats.totalVisitors || 0, 2000);
+        }
+    } catch (error) {
+        console.error('Failed to load view count:', error);
+    }
+}
+
+// Анимация счетчика
+function animateCounter(element, start, end, duration) {
+    const startTime = Date.now();
+    
+    function update() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function (ease out quart)
+        const ease = 1 - Math.pow(1 - progress, 4);
+        const current = Math.floor(start + (end - start) * ease);
+        
+        element.textContent = current.toLocaleString('ru-RU');
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}

@@ -211,9 +211,46 @@ body::before {
 .description {
     font-size: 14px;
     color: #888888;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 2;
+}
+
+.view-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+    color: #a0a0a0;
     margin-bottom: 20px;
     position: relative;
     z-index: 2;
+    animation: counterSlideIn 0.8s ease-out 0.3s both;
+}
+
+.view-counter i {
+    color: #60a5fa;
+    animation: eyePulse 2s ease-in-out infinite;
+}
+
+@keyframes counterSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes eyePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
 }
 
 .badges {
