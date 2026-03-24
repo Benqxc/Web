@@ -151,10 +151,30 @@ body::before {
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    max-width: 400px;
+    max-width: 450px;
     width: 100%;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.profile-card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.profile-card::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.profile-card::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.profile-card::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .profile-card::before {
@@ -666,9 +686,19 @@ body::before {
 
 .repos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 15px;
+    grid-template-columns: 1fr;
+    gap: 12px;
     margin-top: 15px;
+}
+
+/* Скрываем пустые карточки-заглушки после загрузки */
+.repos-grid:not(:has(.repo-card:not(.loading))) .repo-card.loading {
+    display: none;
+}
+
+/* Показываем заглушки только если репозитории не загрузились */
+.repos-grid:has(.repo-card:not(.loading)) .repo-card.loading {
+    display: none;
 }
 
 .repo-card {
