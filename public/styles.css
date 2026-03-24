@@ -51,22 +51,27 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-    background-size: 200% 200%;
-    animation: gradient-shift 15s ease infinite;
+    background: url('https://i.ibb.co/jPztFs9d/1.jpg') no-repeat center center fixed;
+    background-size: cover;
     color: var(--text-primary);
     overflow: hidden;
     position: relative;
 }
 
-@keyframes gradient-shift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    transition: background 0.3s ease;
 }
 
-[data-theme="light"] {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
-    background-size: 200% 200%;
+[data-theme="light"] body::before {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .background {
@@ -700,97 +705,6 @@ body {
     border-color: var(--accent-color);
     color: #ffffff;
     transform: translateY(-2px);
-}
-
-/* GitHub секция */
-.github-section {
-    margin-top: 20px;
-}
-
-.repos-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-top: 15px;
-}
-
-/* Скрываем пустые карточки-заглушки после загрузки */
-.repos-grid:not(:has(.repo-card:not(.loading))) .repo-card.loading {
-    display: none;
-}
-
-/* Показываем заглушки только если репозитории не загрузились */
-.repos-grid:has(.repo-card:not(.loading)) .repo-card.loading {
-    display: none;
-}
-
-.repo-card {
-    background: var(--hover-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 15px;
-    transition: all 0.3s ease;
-}
-
-.repo-card:hover {
-    border-color: var(--accent-color);
-    transform: translateY(-3px);
-}
-
-.repo-card.loading .repo-skeleton {
-    height: 80px;
-    background: linear-gradient(90deg, var(--hover-bg) 25%, var(--border-color) 50%, var(--hover-bg) 75%);
-    background-size: 200% 100%;
-    animation: skeletonLoading 1.5s infinite;
-    border-radius: 8px;
-}
-
-@keyframes skeletonLoading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-.repo-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.repo-name a {
-    color: var(--accent-color);
-    text-decoration: none;
-}
-
-.repo-name a:hover {
-    text-decoration: underline;
-}
-
-.repo-description {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
-    line-height: 1.4;
-}
-
-.repo-stats {
-    display: flex;
-    gap: 15px;
-    font-size: 11px;
-    color: var(--text-secondary);
-}
-
-.repo-stats span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.repo-stats i {
-    color: var(--accent-color);
 }
 
 /* Уведомления (Toast) */
