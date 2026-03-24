@@ -4,8 +4,7 @@ const urlsToCache = [
   '/index.html',
   '/styles.css',
   '/script.js',
-  '/manifest.json',
-  '/favicon.ico'
+  '/manifest.json'
 ];
 
 // Установка Service Worker
@@ -14,10 +13,20 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-      .catch(err => {
-        console.log('Cache addAll error:', err);
+        // Кэшируем только существующие ресурсы
+        return Promise.all(
+          urlsToCache.map(url => {
+            return fetch(url)
+              .then(response => {
+                if (response.ok) {
+                  return cache.put(url, response);
+                }
+              })
+              .catch(err => {
+                console.log(`Cache skip: ${url}`, err);
+              });
+          })
+        );
       })
   );
   self.skipWaiting();

@@ -312,69 +312,69 @@ function animateCounter(element, start, end, duration) {
         if (progress < 1) {
             requestAnimationFrame(update);
         }
-        
-        // ============================================
-        // GitHub API - загрузка репозиториев
-        // ============================================
-        async function loadGitHubRepos() {
-            const reposGrid = document.getElementById('reposGrid');
-            if (!reposGrid) return;
-            
-            const username = 'Benqxc';
-            
-            try {
-                const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=6`);
-                
-                if (!response.ok) {
-                    throw new Error('GitHub API error');
-                }
-                
-                const repos = await response.json();
-                
-                // Сортируем по количеству звёзд
-                const sortedRepos = repos.sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 3);
-                
-                reposGrid.innerHTML = sortedRepos.map(repo => `
-                    <div class="repo-card">
-                        <div class="repo-name">
-                            <i class="fab fa-github"></i>
-                            <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">${repo.name}</a>
-                        </div>
-                        <p class="repo-description">${repo.description || 'Нет описания'}</p>
-                        <div class="repo-stats">
-                            <span><i class="fas fa-star"></i> ${repo.stargazers_count}</span>
-                            <span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span>
-                            <span><i class="fas fa-circle"></i> ${repo.language || 'Unknown'}</span>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Failed to load GitHub repos:', error);
-                reposGrid.innerHTML = `
-                    <div class="repo-card">
-                        <p class="repo-description">Не удалось загрузить репозитории</p>
-                    </div>
-                `;
-                showToast('Не удалось загрузить GitHub репозитории', 'error');
-            }
-        }
-        
-        // ============================================
-        // Регистрация Service Worker (PWA)
-        // ============================================
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
-        }
     }
     
     requestAnimationFrame(update);
+}
+
+// ============================================
+// GitHub API - загрузка репозиториев
+// ============================================
+async function loadGitHubRepos() {
+    const reposGrid = document.getElementById('reposGrid');
+    if (!reposGrid) return;
+    
+    const username = 'Benqxc';
+    
+    try {
+        const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=6`);
+        
+        if (!response.ok) {
+            throw new Error('GitHub API error');
+        }
+        
+        const repos = await response.json();
+        
+        // Сортируем по количеству звёзд
+        const sortedRepos = repos.sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 3);
+        
+        reposGrid.innerHTML = sortedRepos.map(repo => `
+            <div class="repo-card">
+                <div class="repo-name">
+                    <i class="fab fa-github"></i>
+                    <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">${repo.name}</a>
+                </div>
+                <p class="repo-description">${repo.description || 'Нет описания'}</p>
+                <div class="repo-stats">
+                    <span><i class="fas fa-star"></i> ${repo.stargazers_count}</span>
+                    <span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span>
+                    <span><i class="fas fa-circle"></i> ${repo.language || 'Unknown'}</span>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Failed to load GitHub repos:', error);
+        reposGrid.innerHTML = `
+            <div class="repo-card">
+                <p class="repo-description">Не удалось загрузить репозитории</p>
+            </div>
+        `;
+        showToast('Не удалось загрузить GitHub репозитории', 'error');
+    }
+}
+
+// ============================================
+// Регистрация Service Worker (PWA)
+// ============================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('Service Worker registered:', registration.scope);
+            })
+            .catch(error => {
+                console.log('Service Worker registration failed:', error);
+            });
+    });
 }
