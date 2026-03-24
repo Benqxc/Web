@@ -1,5 +1,5 @@
 const express = require('express');
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -27,51 +27,73 @@ const loginLimiter = rateLimit({
     message: { error: 'Слишком много попыток входа. Попробуйте позже.' }
 });
 
-// Инициализация базы данных
-const db = new Database('visitors.db');
+// Инициализация PostgreSQL
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false
+    } : false
+});
 
 // Создание таблиц
-db.exec(`
-    CREATE TABLE IF NOT EXISTS visitors (
-        id TEXT PRIMARY KEY,
-        ip TEXT NOT NULL,
-        country TEXT,
-        city TEXT,
-        user_agent TEXT,
-        browser TEXT,
-        os TEXT,
-        device TEXT,
-        screen_resolution TEXT,
-        timezone TEXT,
-        language TEXT,
-        session_duration INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-    
-    CREATE TABLE IF NOT EXISTS admin_password (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        password_hash TEXT NOT NULL
-    )
-    
-    CREATE TABLE IF NOT EXISTS sessions (
-        id TEXT PRIMARY KEY,
-        visitor_id TEXT NOT NULL,
-        started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (visitor_id) REFERENCES visitors(id)
-    )
-`);
+async function initDatabase() {
+    const client = await pool.connect();
+    try {
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS visitors (
+                id TEXT PRIMARY KEY,
+                ip TEXT NOT NULL,
+                country TEXT,
+                city TEXT,
+                user_agent TEXT,
+                browser TEXT,
+                os TEXT,
+                device TEXT,
+                screen_resolution TEXT,
+                timezone TEXT,
+                language TEXT,
+                session_duration INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
-// Установка пароля по умолчанию если нет
-const adminPasswordCheck = db.prepare('SELECT * FROM admin_password WHERE id = 1').get();
-if (!adminPasswordCheck) {
-    const defaultPassword = bcrypt.hashSync('admin123', 10);
-    db.prepare('INSERT INTO admin_password (id, password_hash) VALUES (1, ?)').run(defaultPassword);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS admin_password (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                password_hash TEXT NOT NULL
+            )
+        `);
+
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS sessions (
+                id TEXT PRIMARY KEY,
+                visitor_id TEXT NOT NULL,
+                started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (visitor_id) REFERENCES visitors(id)
+            )
+        `);
+
+        // Установка пароля по умолчанию если нет
+        const adminPasswordCheck = await client.query('SELECT * FROM admin_password WHERE id = 1');
+        if (adminPasswordCheck.rows.length === 0) {
+            const defaultPassword = bcrypt.hashSync('admin123', 10);
+            await client.query('INSERT INTO admin_password (id, password_hash) VALUES (1, $1)', [defaultPassword]);
+        }
+
+        console.log('Database initialized successfully');
+    } catch (error) {
+        console.error('Database initialization error:', error);
+        throw error;
+    } finally {
+        client.release();
+    }
 }
 
 // API: Трекинг посетителя
 app.post('/api/track', async (req, res) => {
+    const client = await pool.connect();
     try {
         const { 
             sessionId, 
@@ -104,26 +126,26 @@ app.post('/api/track', async (req, res) => {
         }
         
         // Проверка существующего посетителя
-        let visitor = db.prepare('SELECT * FROM visitors WHERE id = ?').get(visitorId);
+        const visitor = await client.query('SELECT * FROM visitors WHERE id = $1', [visitorId]);
         
-        if (visitor) {
+        if (visitor.rows.length > 0) {
             // Обновление сессии
             if (sessionDuration !== undefined) {
-                db.prepare(`
+                await client.query(`
                     UPDATE visitors 
-                    SET session_duration = ?, 
+                    SET session_duration = $1, 
                         updated_at = CURRENT_TIMESTAMP 
-                    WHERE id = ?
-                `).run(sessionDuration, visitorId);
+                    WHERE id = $2
+                `, [sessionDuration, visitorId]);
             }
         } else {
             // Новый посетитель
-            db.prepare(`
+            await client.query(`
                 INSERT INTO visitors (
                     id, ip, country, city, user_agent, browser, os, device,
                     screen_resolution, timezone, language
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `).run(
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            `, [
                 visitorId,
                 ip,
                 country,
@@ -135,7 +157,7 @@ app.post('/api/track', async (req, res) => {
                 screenResolution || 'unknown',
                 timezone || 'unknown',
                 language || 'unknown'
-            );
+            ]);
         }
         
         res.json({ 
@@ -146,11 +168,14 @@ app.post('/api/track', async (req, res) => {
     } catch (error) {
         console.error('Track error:', error);
         res.status(500).json({ error: 'Tracking failed' });
+    } finally {
+        client.release();
     }
 });
 
 // API: Вход администратора
-app.post('/api/login', loginLimiter, (req, res) => {
+app.post('/api/login', loginLimiter, async (req, res) => {
+    const client = await pool.connect();
     try {
         const { password } = req.body;
         
@@ -158,9 +183,9 @@ app.post('/api/login', loginLimiter, (req, res) => {
             return res.status(400).json({ error: 'Пароль обязателен' });
         }
         
-        const adminRecord = db.prepare('SELECT * FROM admin_password WHERE id = 1').get();
+        const adminRecord = await client.query('SELECT * FROM admin_password WHERE id = 1');
         
-        if (bcrypt.compareSync(password, adminRecord.password_hash)) {
+        if (adminRecord.rows.length > 0 && bcrypt.compareSync(password, adminRecord.rows[0].password_hash)) {
             const token = uuidv4();
             res.json({ 
                 success: true, 
@@ -173,103 +198,119 @@ app.post('/api/login', loginLimiter, (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Ошибка входа' });
+    } finally {
+        client.release();
     }
 });
 
 // API: Получение статистики
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', async (req, res) => {
+    const client = await pool.connect();
     try {
         const stats = {};
         
         // Общее количество посетителей
-        stats.totalVisitors = db.prepare('SELECT COUNT(*) as count FROM visitors').get().count;
+        const totalResult = await client.query('SELECT COUNT(*) as count FROM visitors');
+        stats.totalVisitors = parseInt(totalResult.rows[0].count);
         
         // Уникальные IP
-        stats.uniqueIPs = db.prepare('SELECT COUNT(DISTINCT ip) as count FROM visitors').get().count;
+        const uniqueIPResult = await client.query('SELECT COUNT(DISTINCT ip) as count FROM visitors');
+        stats.uniqueIPs = parseInt(uniqueIPResult.rows[0].count);
         
         // Посетители за сегодня
-        stats.todayVisitors = db.prepare(`
+        const todayResult = await client.query(`
             SELECT COUNT(*) as count FROM visitors 
-            WHERE DATE(created_at) = DATE('now')
-        `).get().count;
+            WHERE DATE(created_at) = DATE(CURRENT_TIMESTAMP)
+        `);
+        stats.todayVisitors = parseInt(todayResult.rows[0].count);
         
         // Посетители за неделю
-        stats.weekVisitors = db.prepare(`
+        const weekResult = await client.query(`
             SELECT COUNT(*) as count FROM visitors 
-            WHERE created_at >= DATE('now', '-7 days')
-        `).get().count;
+            WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+        `);
+        stats.weekVisitors = parseInt(weekResult.rows[0].count);
         
         // Среднее время на сайте
-        const avgDuration = db.prepare(`
+        const avgResult = await client.query(`
             SELECT AVG(session_duration) as avg FROM visitors 
             WHERE session_duration > 0
-        `).get().avg || 0;
-        stats.avgSessionDuration = Math.round(avgDuration);
+        `);
+        stats.avgSessionDuration = Math.round(parseFloat(avgResult.rows[0].avg) || 0);
         
         // Последний посетитель
-        const lastVisitor = db.prepare(`
+        const lastVisitorResult = await client.query(`
             SELECT * FROM visitors ORDER BY created_at DESC LIMIT 1
-        `).get();
-        stats.lastVisit = lastVisitor ? lastVisitor.created_at : null;
+        `);
+        stats.lastVisit = lastVisitorResult.rows.length > 0 ? lastVisitorResult.rows[0].created_at : null;
         
         // Топ стран
-        stats.topCountries = db.prepare(`
+        const countriesResult = await client.query(`
             SELECT country, COUNT(*) as count 
             FROM visitors 
             GROUP BY country 
             ORDER BY count DESC 
             LIMIT 5
-        `).all();
+        `);
+        stats.topCountries = countriesResult.rows;
         
         // Топ браузеров
-        stats.topBrowsers = db.prepare(`
+        const browsersResult = await client.query(`
             SELECT browser, COUNT(*) as count 
             FROM visitors 
             GROUP BY browser 
             ORDER BY count DESC 
             LIMIT 5
-        `).all();
+        `);
+        stats.topBrowsers = browsersResult.rows;
         
         // Топ ОС
-        stats.topOS = db.prepare(`
+        const osResult = await client.query(`
             SELECT os, COUNT(*) as count 
             FROM visitors 
             GROUP BY os 
             ORDER BY count DESC 
             LIMIT 5
-        `).all();
+        `);
+        stats.topOS = osResult.rows;
         
         res.json(stats);
     } catch (error) {
         console.error('Stats error:', error);
         res.status(500).json({ error: 'Ошибка получения статистики' });
+    } finally {
+        client.release();
     }
 });
 
 // API: Получение всех посетителей
-app.get('/api/visitors', (req, res) => {
+app.get('/api/visitors', async (req, res) => {
+    const client = await pool.connect();
     try {
-        const visitors = db.prepare(`
+        const visitors = await client.query(`
             SELECT * FROM visitors 
             ORDER BY created_at DESC
-        `).all();
+        `);
         
-        res.json(visitors);
+        res.json(visitors.rows);
     } catch (error) {
         console.error('Visitors error:', error);
         res.status(500).json({ error: 'Ошибка получения посетителей' });
+    } finally {
+        client.release();
     }
 });
 
 // API: Экспорт в CSV
-app.get('/api/export/csv', (req, res) => {
+app.get('/api/export/csv', async (req, res) => {
+    const client = await pool.connect();
     try {
-        const visitors = db.prepare('SELECT * FROM visitors ORDER BY created_at DESC').all();
+        const visitors = await client.query('SELECT * FROM visitors ORDER BY created_at DESC');
         
         const headers = ['ID', 'IP', 'Страна', 'Город', 'Браузер', 'ОС', 'Разрешение', 'Время на сайте (сек)', 'Дата'];
         const csvRows = [headers.join(',')];
         
-        visitors.forEach(v => {
+        visitors.rows.forEach(v => {
             csvRows.push([
                 v.id,
                 v.ip,
@@ -289,57 +330,78 @@ app.get('/api/export/csv', (req, res) => {
     } catch (error) {
         console.error('CSV export error:', error);
         res.status(500).json({ error: 'Ошибка экспорта' });
+    } finally {
+        client.release();
     }
 });
 
 // API: Экспорт в JSON
-app.get('/api/export/json', (req, res) => {
+app.get('/api/export/json', async (req, res) => {
+    const client = await pool.connect();
     try {
-        const visitors = db.prepare('SELECT * FROM visitors ORDER BY created_at DESC').all();
+        const visitors = await client.query('SELECT * FROM visitors ORDER BY created_at DESC');
         
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Content-Disposition', 'attachment; filename=visitors.json');
-        res.json(visitors);
+        res.json(visitors.rows);
     } catch (error) {
         console.error('JSON export error:', error);
         res.status(500).json({ error: 'Ошибка экспорта' });
+    } finally {
+        client.release();
     }
 });
 
 // API: Очистка данных
-app.delete('/api/visitors', (req, res) => {
+app.delete('/api/visitors', async (req, res) => {
+    const client = await pool.connect();
     try {
-        db.prepare('DELETE FROM visitors').run();
+        await client.query('DELETE FROM visitors');
         res.json({ success: true, message: 'Данные очищены' });
     } catch (error) {
         console.error('Delete error:', error);
         res.status(500).json({ error: 'Ошибка очистки' });
+    } finally {
+        client.release();
     }
 });
 
 // API: Смена пароля
-app.post('/api/change-password', (req, res) => {
+app.post('/api/change-password', async (req, res) => {
+    const client = await pool.connect();
     try {
         const { currentPassword, newPassword } = req.body;
         
-        const adminRecord = db.prepare('SELECT * FROM admin_password WHERE id = 1').get();
+        const adminRecord = await client.query('SELECT * FROM admin_password WHERE id = 1');
         
-        if (!bcrypt.compareSync(currentPassword, adminRecord.password_hash)) {
+        if (adminRecord.rows.length === 0 || !bcrypt.compareSync(currentPassword, adminRecord.rows[0].password_hash)) {
             return res.status(401).json({ error: 'Текущий пароль неверен' });
         }
         
         const newHash = bcrypt.hashSync(newPassword, 10);
-        db.prepare('UPDATE admin_password SET password_hash = ? WHERE id = 1').run(newHash);
+        await client.query('UPDATE admin_password SET password_hash = $1 WHERE id = 1', [newHash]);
         
         res.json({ success: true, message: 'Пароль изменён' });
     } catch (error) {
         console.error('Password change error:', error);
         res.status(500).json({ error: 'Ошибка смены пароля' });
+    } finally {
+        client.release();
     }
 });
 
 // Запуск сервера
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Database: visitors.db`);
-});
+async function startServer() {
+    try {
+        await initDatabase();
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+            console.log(`Database: PostgreSQL (Railway)`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+}
+
+startServer();
