@@ -1,4 +1,79 @@
+// ============================================
+// Уведомления (Toast)
+// ============================================
+function showToast(message, type = 'info', duration = 3000) {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        info: 'fa-info-circle'
+    };
+    
+    toast.innerHTML = `
+        <i class="fas ${icons[type] || icons.info}"></i>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('toast-hide');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// ============================================
+// Индикатор загрузки
+// ============================================
+function hideLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) {
+        loader.classList.add('hidden');
+        setTimeout(() => loader.remove(), 500);
+    }
+}
+
+// ============================================
+// Переключатель темы
+// ============================================
+function initThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const icon = themeToggle?.querySelector('i');
+    
+    // Получаем сохранённую тему
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(icon, savedTheme);
+    
+    themeToggle?.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(icon, newTheme);
+        
+        showToast(`Тема: ${newTheme === 'light' ? 'Светлая' : 'Тёмная'}`, 'info', 2000);
+    });
+}
+
+function updateThemeIcon(icon, theme) {
+    if (!icon) return;
+    icon.className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+// ============================================
 // Генерация уникального ID сессии
+// ============================================
 function generateSessionId() {
     return 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
 }
@@ -175,6 +250,9 @@ function createParticle(x, y) {
 
 // Анимация появления элементов
 document.addEventListener('DOMContentLoaded', () => {
+    // Инициализация темы
+    initThemeToggle();
+    
     const elements = document.querySelectorAll('.avatar, .username, .description, .view-counter, .badges, .social-links');
     
     elements.forEach((el, index) => {
@@ -190,6 +268,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Загрузка счетчика просмотров
     loadViewCount();
+    
+    // Загрузка GitHub репозиториев
+    loadGitHubRepos();
+    
+    // Скрываем лоадер после загрузки
+    window.addEventListener('load', hideLoader);
+    
+    // На случай если страница уже загружена
+    if (document.readyState === 'complete') {
+        hideLoader();
+    }
 });
 
 // Загрузка счетчика просмотров
@@ -222,6 +311,68 @@ function animateCounter(element, start, end, duration) {
         
         if (progress < 1) {
             requestAnimationFrame(update);
+        }
+        
+        // ============================================
+        // GitHub API - загрузка репозиториев
+        // ============================================
+        async function loadGitHubRepos() {
+            const reposGrid = document.getElementById('reposGrid');
+            if (!reposGrid) return;
+            
+            const username = 'Benqxc';
+            
+            try {
+                const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=6`);
+                
+                if (!response.ok) {
+                    throw new Error('GitHub API error');
+                }
+                
+                const repos = await response.json();
+                
+                // Сортируем по количеству звёзд
+                const sortedRepos = repos.sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 3);
+                
+                reposGrid.innerHTML = sortedRepos.map(repo => `
+                    <div class="repo-card">
+                        <div class="repo-name">
+                            <i class="fab fa-github"></i>
+                            <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">${repo.name}</a>
+                        </div>
+                        <p class="repo-description">${repo.description || 'Нет описания'}</p>
+                        <div class="repo-stats">
+                            <span><i class="fas fa-star"></i> ${repo.stargazers_count}</span>
+                            <span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span>
+                            <span><i class="fas fa-circle"></i> ${repo.language || 'Unknown'}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Failed to load GitHub repos:', error);
+                reposGrid.innerHTML = `
+                    <div class="repo-card">
+                        <p class="repo-description">Не удалось загрузить репозитории</p>
+                    </div>
+                `;
+                showToast('Не удалось загрузить GitHub репозитории', 'error');
+            }
+        }
+        
+        // ============================================
+        // Регистрация Service Worker (PWA)
+        // ============================================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
         }
     }
     

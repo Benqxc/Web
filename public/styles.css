@@ -4,6 +4,28 @@
     box-sizing: border-box;
 }
 
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: rgba(20, 20, 20, 0.8);
+    --text-primary: #ffffff;
+    --text-secondary: #888888;
+    --accent-color: #60a5fa;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --card-shadow: rgba(0, 0, 0, 0.5);
+    --hover-bg: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] {
+    --bg-primary: #f0f2f5;
+    --bg-secondary: rgba(255, 255, 255, 0.9);
+    --text-primary: #1a1a2e;
+    --text-secondary: #666666;
+    --accent-color: #3b82f6;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --card-shadow: rgba(0, 0, 0, 0.1);
+    --hover-bg: rgba(0, 0, 0, 0.05);
+}
+
 body {
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
@@ -12,9 +34,10 @@ body {
     align-items: center;
     background: url('https://i.ibb.co/jPztFs9d/1.jpg') no-repeat center center fixed;
     background-size: cover;
-    color: #ffffff;
+    color: var(--text-primary);
     overflow: hidden;
     position: relative;
+    transition: background 0.3s ease;
 }
 
 body::before {
@@ -26,6 +49,11 @@ body::before {
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: -1;
+    transition: background 0.3s ease;
+}
+
+[data-theme="light"] body::before {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .background {
@@ -463,6 +491,321 @@ body::before {
     50% { box-shadow: 0 0 0 15px rgba(96, 165, 250, 0); }
 }
 
+/* Индикатор загрузки */
+.loader-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loader-container.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loader {
+    display: flex;
+    gap: 15px;
+}
+
+.loader-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    animation: loaderBounce 1.4s ease-in-out infinite;
+}
+
+.loader-circle:nth-child(1) { animation-delay: 0s; }
+.loader-circle:nth-child(2) { animation-delay: 0.2s; }
+.loader-circle:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loaderBounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.loader-text {
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    animation: pulseText 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseText {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Переключатель темы */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 80px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.theme-toggle:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent-color);
+    transform: scale(1.1) rotate(15deg);
+}
+
+/* Раздел "Обо мне" */
+.about-section {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border-color);
+    animation: fadeIn 0.8s ease-out 0.5s both;
+}
+
+.about-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.about-title i {
+    color: var(--accent-color);
+    -webkit-text-fill-color: var(--accent-color);
+}
+
+.about-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+/* Навыки */
+.skills-container {
+    margin-bottom: 25px;
+}
+
+.skills-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.skills-title i {
+    color: var(--accent-color);
+}
+
+.skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.skill-tag {
+    padding: 8px 16px;
+    background: var(--hover-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.skill-tag:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* GitHub секция */
+.github-section {
+    margin-top: 20px;
+}
+
+.repos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.repo-card {
+    background: var(--hover-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+.repo-card:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-3px);
+}
+
+.repo-card.loading .repo-skeleton {
+    height: 80px;
+    background: linear-gradient(90deg, var(--hover-bg) 25%, var(--border-color) 50%, var(--hover-bg) 75%);
+    background-size: 200% 100%;
+    animation: skeletonLoading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes skeletonLoading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.repo-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.repo-name a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.repo-name a:hover {
+    text-decoration: underline;
+}
+
+.repo-description {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.repo-stats {
+    display: flex;
+    gap: 15px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.repo-stats span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.repo-stats i {
+    color: var(--accent-color);
+}
+
+/* Уведомления (Toast) */
+.toast-container {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
+    box-shadow: 0 4px 20px var(--card-shadow);
+    animation: toastSlideIn 0.3s ease-out;
+    min-width: 250px;
+}
+
+.toast.success {
+    border-color: #34d399;
+}
+
+.toast.error {
+    border-color: #f87171;
+}
+
+.toast.info {
+    border-color: var(--accent-color);
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast-hide {
+    animation: toastSlideOut 0.3s ease-out forwards;
+}
+
+@keyframes toastSlideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Улучшенная мобильная версия */
 @media (max-width: 480px) {
     .profile-card {
         padding: 30px 20px;
@@ -470,5 +813,78 @@ body::before {
     
     .username {
         font-size: 24px;
+    }
+    
+    .theme-toggle {
+        right: 20px;
+        top: 20px;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .music-control {
+        bottom: 80px;
+        right: 20px;
+    }
+    
+    .social-links {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .social-link {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .badges {
+        gap: 8px;
+    }
+    
+    .badge {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+    
+    .repos-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .skills-grid {
+        gap: 8px;
+    }
+    
+    .skill-tag {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .footer {
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 360px) {
+    .profile-card {
+        padding: 25px 15px;
+    }
+    
+    .avatar-container {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .avatar {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .avatar-glow {
+        width: 120px;
+        height: 120px;
     }
 }

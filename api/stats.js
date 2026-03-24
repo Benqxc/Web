@@ -87,6 +87,29 @@ module.exports = async (req, res) => {
       .slice(0, 5)
       .map(([os, count]) => ({ os, count }));
 
+    // Посещения по дням (последние 7 дней)
+    const visitsByDay = {};
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dayStr = date.toISOString().split('T')[0];
+      last7Days.push(dayStr);
+      visitsByDay[dayStr] = 0;
+    }
+    
+    visitors.forEach(v => {
+      const day = v.created_at.split('T')[0];
+      if (visitsByDay.hasOwnProperty(day)) {
+        visitsByDay[day]++;
+      }
+    });
+    
+    stats.visitsByDay = last7Days.map(day => ({
+      day: new Date(day).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }),
+      count: visitsByDay[day]
+    }));
+
     res.status(200).json(stats);
   } catch (error) {
     console.error('Stats error:', error);

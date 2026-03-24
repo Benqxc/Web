@@ -20,6 +20,10 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="https://i.ibb.co/Xrg8Tszz/7.jpg">
     
+    <!-- PWA -->
+    <meta name="theme-color" content="#1a1a2e">
+    <link rel="manifest" href="manifest.json">
+    
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,11 +31,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Индикатор загрузки -->
+    <div class="loader-container" id="loader">
+        <div class="loader">
+            <div class="loader-circle"></div>
+            <div class="loader-circle"></div>
+            <div class="loader-circle"></div>
+        </div>
+        <p class="loader-text">Загрузка...</p>
+    </div>
+    
     <div class="background">
         <div class="stars"></div>
         <div class="stars2"></div>
         <div class="stars3"></div>
     </div>
+    
+    <!-- Переключатель темы -->
+    <button class="theme-toggle" id="themeToggle" title="Сменить тему">
+        <i class="fas fa-moon"></i>
+    </button>
     
     <div class="container">
         <div class="profile-card">
@@ -74,6 +93,51 @@
                 <a href="https://twitch.tv/benqxc" class="social-link" title="Twitch">
                     <i class="fab fa-twitch"></i>
                 </a>
+            </div>
+            
+            <!-- Раздел "Обо мне" -->
+            <div class="about-section" id="aboutSection">
+                <h2 class="about-title">
+                    <i class="fas fa-user"></i>
+                    Обо мне
+                </h2>
+                <p class="about-text">
+                    Разработчик, увлечённый созданием современных веб-приложений.
+                    Люблю экспериментировать с новыми технологиями и создавать удобные интерфейсы.
+                </p>
+                
+                <div class="skills-container">
+                    <h3 class="skills-title">Навыки</h3>
+                    <div class="skills-grid">
+                        <span class="skill-tag">JavaScript</span>
+                        <span class="skill-tag">TypeScript</span>
+                        <span class="skill-tag">React</span>
+                        <span class="skill-tag">Node.js</span>
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">SQL</span>
+                        <span class="skill-tag">Git</span>
+                        <span class="skill-tag">Docker</span>
+                    </div>
+                </div>
+                
+                <!-- GitHub репозитории -->
+                <div class="github-section" id="githubSection">
+                    <h3 class="skills-title">
+                        <i class="fab fa-github"></i>
+                        Топ репозиториев
+                    </h3>
+                    <div class="repos-grid" id="reposGrid">
+                        <div class="repo-card loading">
+                            <div class="repo-skeleton"></div>
+                        </div>
+                        <div class="repo-card loading">
+                            <div class="repo-skeleton"></div>
+                        </div>
+                        <div class="repo-card loading">
+                            <div class="repo-skeleton"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
