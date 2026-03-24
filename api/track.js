@@ -1,16 +1,6 @@
-const { Pool } = require('pg');
+const { kv } = require('@vercel/kv');
 const { v4: uuidv4 } = require('uuid');
 const useragent = require('useragent');
-
-// Создаём pool для каждого запроса (serverless-совместимо)
-function getPool() {
-  return new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: false
-    } : false
-  });
-}
 
 module.exports = async (req, res) => {
   // CORS headers
@@ -25,9 +15,6 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  const pool = getPool();
-  const client = await pool.connect();
 
   try {
     const {
@@ -60,39 +47,38 @@ module.exports = async (req, res) => {
       console.error('Geo lookup failed:', e.message);
     }
 
-    // Проверка существующего посетителя
-    const visitor = await client.query('SELECT * FROM visitors WHERE id = $1', [visitorId]);
+    const visitorData = {
+      id: visitorId,
+      ip,
+      country,
+      city,
+      user_agent: req.headers['user-agent'] || '',
+      browser: agent.toAgentString(),
+      os: agent.os.toString(),
+      device: agent.device.toString(),
+      screen_resolution: screenResolution || 'unknown',
+      timezone: timezone || 'unknown',
+      language: language || 'unknown',
+      session_duration: sessionDuration || 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-    if (visitor.rows.length > 0) {
+    // Проверка существующего посетителя
+    const existingVisitor = await kv.get(`visitor:${visitorId}`);
+
+    if (existingVisitor) {
       // Обновление сессии
       if (sessionDuration !== undefined) {
-        await client.query(`
-          UPDATE visitors
-          SET session_duration = $1,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE id = $2
-        `, [sessionDuration, visitorId]);
+        visitorData.created_at = existingVisitor.created_at;
+        visitorData.session_duration = sessionDuration;
       }
+      await kv.set(`visitor:${visitorId}`, visitorData);
     } else {
       // Новый посетитель
-      await client.query(`
-        INSERT INTO visitors (
-          id, ip, country, city, user_agent, browser, os, device,
-          screen_resolution, timezone, language
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      `, [
-        visitorId,
-        ip,
-        country,
-        city,
-        req.headers['user-agent'] || '',
-        agent.toAgentString(),
-        agent.os.toString(),
-        agent.device.toString(),
-        screenResolution || 'unknown',
-        timezone || 'unknown',
-        language || 'unknown'
-      ]);
+      await kv.set(`visitor:${visitorId}`, visitorData);
+      // Добавляем в список всех посетителей
+      await kv.lpush('visitors', visitorId);
     }
 
     res.status(200).json({
@@ -103,8 +89,5 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('Track error:', error);
     res.status(500).json({ error: 'Tracking failed' });
-  } finally {
-    client.release();
-    await pool.end();
   }
 };

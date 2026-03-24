@@ -1,14 +1,5 @@
-const { Pool } = require('pg');
+const { kv } = require('@vercel/kv');
 const bcrypt = require('bcryptjs');
-
-function getPool() {
-  return new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: false
-    } : false
-  });
-}
 
 module.exports = async (req, res) => {
   // CORS headers
@@ -24,27 +15,28 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const pool = getPool();
-  const client = await pool.connect();
-
   try {
     const { currentPassword, newPassword } = req.body;
 
-    const adminRecord = await client.query('SELECT * FROM admin_password WHERE id = 1');
+    // Получаем текущий хэш
+    const storedHash = await kv.get('admin_password');
 
-    if (adminRecord.rows.length === 0 || !bcrypt.compareSync(currentPassword, adminRecord.rows[0].password_hash)) {
+    // Если пароль не установлен, используем пароль по умолчанию
+    if (!storedHash) {
+      if (currentPassword !== 'admin123') {
+        return res.status(401).json({ error: 'Текущий пароль неверен' });
+      }
+    } else if (!bcrypt.compareSync(currentPassword, storedHash)) {
       return res.status(401).json({ error: 'Текущий пароль неверен' });
     }
 
+    // Устанавливаем новый пароль
     const newHash = bcrypt.hashSync(newPassword, 10);
-    await client.query('UPDATE admin_password SET password_hash = $1 WHERE id = 1', [newHash]);
+    await kv.set('admin_password', newHash);
 
     res.status(200).json({ success: true, message: 'Пароль изменён' });
   } catch (error) {
     console.error('Password change error:', error);
     res.status(500).json({ error: 'Ошибка смены пароля' });
-  } finally {
-    client.release();
-    await pool.end();
   }
 };

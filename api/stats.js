@@ -1,13 +1,4 @@
-const { Pool } = require('pg');
-
-function getPool() {
-  return new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: false
-    } : false
-  });
-}
+const { kv } = require('@vercel/kv');
 
 module.exports = async (req, res) => {
   // CORS headers
@@ -23,83 +14,82 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const pool = getPool();
-  const client = await pool.connect();
-
   try {
     const stats = {};
 
+    // Получаем всех посетителей
+    const visitorIds = await kv.lrange('visitors', 0, -1);
+    const visitors = [];
+
+    for (const id of visitorIds) {
+      const visitor = await kv.get(`visitor:${id}`);
+      if (visitor) {
+        visitors.push(visitor);
+      }
+    }
+
     // Общее количество посетителей
-    const totalResult = await client.query('SELECT COUNT(*) as count FROM visitors');
-    stats.totalVisitors = parseInt(totalResult.rows[0].count);
+    stats.totalVisitors = visitors.length;
 
     // Уникальные IP
-    const uniqueIPResult = await client.query('SELECT COUNT(DISTINCT ip) as count FROM visitors');
-    stats.uniqueIPs = parseInt(uniqueIPResult.rows[0].count);
+    const uniqueIPs = new Set(visitors.map(v => v.ip));
+    stats.uniqueIPs = uniqueIPs.size;
 
     // Посетители за сегодня
-    const todayResult = await client.query(`
-      SELECT COUNT(*) as count FROM visitors
-      WHERE DATE(created_at) = DATE(CURRENT_TIMESTAMP)
-    `);
-    stats.todayVisitors = parseInt(todayResult.rows[0].count);
+    const today = new Date().toISOString().split('T')[0];
+    stats.todayVisitors = visitors.filter(v => v.created_at.startsWith(today)).length;
 
     // Посетители за неделю
-    const weekResult = await client.query(`
-      SELECT COUNT(*) as count FROM visitors
-      WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
-    `);
-    stats.weekVisitors = parseInt(weekResult.rows[0].count);
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    stats.weekVisitors = visitors.filter(v => new Date(v.created_at) >= weekAgo).length;
 
     // Среднее время на сайте
-    const avgResult = await client.query(`
-      SELECT AVG(session_duration) as avg FROM visitors
-      WHERE session_duration > 0
-    `);
-    stats.avgSessionDuration = Math.round(parseFloat(avgResult.rows[0].avg) || 0);
+    const sessionsWithDuration = visitors.filter(v => v.session_duration > 0);
+    const totalDuration = sessionsWithDuration.reduce((sum, v) => sum + (v.session_duration || 0), 0);
+    stats.avgSessionDuration = sessionsWithDuration.length > 0 
+      ? Math.round(totalDuration / sessionsWithDuration.length) 
+      : 0;
 
     // Последний посетитель
-    const lastVisitorResult = await client.query(`
-      SELECT * FROM visitors ORDER BY created_at DESC LIMIT 1
-    `);
-    stats.lastVisit = lastVisitorResult.rows.length > 0 ? lastVisitorResult.rows[0].created_at : null;
+    const sortedVisitors = [...visitors].sort((a, b) => 
+      new Date(b.created_at) - new Date(a.created_at)
+    );
+    stats.lastVisit = sortedVisitors.length > 0 ? sortedVisitors[0].created_at : null;
 
     // Топ стран
-    const countriesResult = await client.query(`
-      SELECT country, COUNT(*) as count
-      FROM visitors
-      GROUP BY country
-      ORDER BY count DESC
-      LIMIT 5
-    `);
-    stats.topCountries = countriesResult.rows;
+    const countryCount = {};
+    visitors.forEach(v => {
+      countryCount[v.country] = (countryCount[v.country] || 0) + 1;
+    });
+    stats.topCountries = Object.entries(countryCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([country, count]) => ({ country, count }));
 
     // Топ браузеров
-    const browsersResult = await client.query(`
-      SELECT browser, COUNT(*) as count
-      FROM visitors
-      GROUP BY browser
-      ORDER BY count DESC
-      LIMIT 5
-    `);
-    stats.topBrowsers = browsersResult.rows;
+    const browserCount = {};
+    visitors.forEach(v => {
+      browserCount[v.browser] = (browserCount[v.browser] || 0) + 1;
+    });
+    stats.topBrowsers = Object.entries(browserCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([browser, count]) => ({ browser, count }));
 
     // Топ ОС
-    const osResult = await client.query(`
-      SELECT os, COUNT(*) as count
-      FROM visitors
-      GROUP BY os
-      ORDER BY count DESC
-      LIMIT 5
-    `);
-    stats.topOS = osResult.rows;
+    const osCount = {};
+    visitors.forEach(v => {
+      osCount[v.os] = (osCount[v.os] || 0) + 1;
+    });
+    stats.topOS = Object.entries(osCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([os, count]) => ({ os, count }));
 
     res.status(200).json(stats);
   } catch (error) {
     console.error('Stats error:', error);
     res.status(500).json({ error: 'Ошибка получения статистики' });
-  } finally {
-    client.release();
-    await pool.end();
   }
 };

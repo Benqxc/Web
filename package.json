@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "Personal bio site with visitor tracking",
   "scripts": {
-    "dev": "vercel dev"
+    "build": "echo 'Build complete'",
+    "start": "vercel dev"
   },
   "dependencies": {
-    "pg": "^8.11.3",
+    "@vercel/kv": "^1.0.1",
     "bcryptjs": "^2.4.3",
     "uuid": "^9.0.0",
     "useragent": "^2.3.0"

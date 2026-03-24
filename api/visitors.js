@@ -1,13 +1,4 @@
-const { Pool } = require('pg');
-
-function getPool() {
-  return new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: false
-    } : false
-  });
-}
+const { kv } = require('@vercel/kv');
 
 module.exports = async (req, res) => {
   // CORS headers
@@ -19,18 +10,33 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  const pool = getPool();
-  const client = await pool.connect();
-
   try {
     if (req.method === 'GET') {
-      const visitors = await client.query(`
-        SELECT * FROM visitors
-        ORDER BY created_at DESC
-      `);
-      res.status(200).json(visitors.rows);
+      // Получаем всех посетителей
+      const visitorIds = await kv.lrange('visitors', 0, -1);
+      const visitors = [];
+
+      for (const id of visitorIds) {
+        const visitor = await kv.get(`visitor:${id}`);
+        if (visitor) {
+          visitors.push(visitor);
+        }
+      }
+
+      // Сортируем по дате
+      visitors.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      res.status(200).json(visitors);
     } else if (req.method === 'DELETE') {
-      await client.query('DELETE FROM visitors');
+      // Удаляем всех посетителей
+      const visitorIds = await kv.lrange('visitors', 0, -1);
+
+      for (const id of visitorIds) {
+        await kv.del(`visitor:${id}`);
+      }
+
+      await kv.del('visitors');
+
       res.status(200).json({ success: true, message: 'Данные очищены' });
     } else {
       res.status(405).json({ error: 'Method not allowed' });
@@ -38,8 +44,5 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('Visitors error:', error);
     res.status(500).json({ error: 'Ошибка получения посетителей' });
-  } finally {
-    client.release();
-    await pool.end();
   }
 };

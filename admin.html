@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | nobame</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background">
+        <div class="stars"></div>
+        <div class="stars2"></div>
+        <div class="stars3"></div>
+    </div>
+    
+    <div class="container">
+        <!-- Страница входа -->
+        <div class="login-card" id="loginCard">
+            <h1 class="login-title">
+                <i class="fas fa-lock"></i>
+                Вход
+            </h1>
+            
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <input type="password" id="passwordInput" placeholder="Введите пароль" required>
+                    <button type="submit" class="login-btn">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                <p class="login-error" id="loginError"></p>
+            </form>
+        </div>
+        
+        <!-- Админ панель -->
+        <div class="admin-panel" id="adminPanel" style="display: none;">
+            <div class="admin-header">
+                <h1 class="admin-title">
+                    <i class="fas fa-shield-alt"></i>
+                    Админ-панель
+                </h1>
+                <div class="header-actions">
+                    <button class="settings-btn" id="settingsBtn" title="Настройки">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="logout-btn" id="logoutBtn" title="Выйти">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-eye"></i>
+                    <span class="stat-number" id="totalVisitors">0</span>
+                    <span class="stat-label">Просмотров</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <span class="stat-number" id="uniqueIPs">0</span>
+                    <span class="stat-label">Уникальных IP</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-calendar-day"></i>
+                    <span class="stat-number" id="todayVisitors">0</span>
+                    <span class="stat-label">За сегодня</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-calendar-week"></i>
+                    <span class="stat-number" id="weekVisitors">0</span>
+                    <span class="stat-label">За неделю</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock"></i>
+                    <span class="stat-number" id="avgDuration">0с</span>
+                    <span class="stat-label">Ср. время</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-history"></i>
+                    <span class="stat-number" id="lastVisit">-</span>
+                    <span class="stat-label">Последний визит</span>
+                </div>
+            </div>
+            
+            <div class="charts-section">
+                <div class="chart-card">
+                    <h3><i class="fas fa-globe"></i> Топ стран</h3>
+                    <div class="chart-list" id="topCountries"></div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-desktop"></i> Топ браузеров</h3>
+                    <div class="chart-list" id="topBrowsers"></div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-hdd"></i> Топ ОС</h3>
+                    <div class="chart-list" id="topOS"></div>
+                </div>
+            </div>
+            
+            <div class="visitors-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-list"></i>
+                        Посетители
+                    </h2>
+                    <div class="section-actions">
+                        <button class="export-btn" id="exportCsvBtn" title="Экспорт CSV">
+                            <i class="fas fa-file-csv"></i>
+                        </button>
+                        <button class="export-btn" id="exportJsonBtn" title="Экспорт JSON">
+                            <i class="fas fa-file-code"></i>
+                        </button>
+                        <button class="clear-btn" id="clearBtn" title="Очистить историю">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="visitors-table">
+                    <div class="table-header">
+                        <span>№</span>
+                        <span>IP адрес</span>
+                        <span>Страна</span>
+                        <span>Браузер</span>
+                        <span>ОС</span>
+                        <span>Время</span>
+                        <span>Дата</span>
+                    </div>
+                    <div class="table-body" id="visitorsTableBody">
+                        <!-- Данные будут добавлены через JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно настроек -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Настройки</h2>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label>Текущий пароль</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Новый пароль</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Подтвердите пароль</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="submit-btn">Изменить пароль</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="admin-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nobame</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="nobame - профиль разработчика">
+    <meta name="keywords" content="nobame, developer, github, programming, telegram, twitch">
+    <meta name="author" content="nobame">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="nobame">
+    <meta property="og:description" content="Добро пожаловать в мой мир">
+    <meta property="og:image" content="https://i.ibb.co/Xrg8Tszz/7.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/Xrg8Tszz/7.jpg">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background">
+        <div class="stars"></div>
+        <div class="stars2"></div>
+        <div class="stars3"></div>
+    </div>
+    
+    <div class="container">
+        <div class="profile-card">
+            <div class="avatar-container">
+                <img src="https://i.ibb.co/Xrg8Tszz/7.jpg" alt="Avatar" class="avatar">
+                <div class="avatar-glow"></div>
+            </div>
+            
+            <h1 class="username">
+                <span class="typing-text"></span>
+                <span class="cursor">|</span>
+            </h1>
+            
+            <p class="description">
+                Хы-хы-ха-ха, ты погляди, свежее мясо!
+            </p>
+            
+            <div class="badges">
+                <span class="badge" title="Developer">
+                    <i class="fas fa-code"></i>
+                </span>
+                <span class="badge" title="Verified">
+                    <i class="fas fa-check-circle"></i>
+                </span>
+            </div>
+            
+            <div class="social-links">
+                <a href="https://github.com/Benqxc" class="social-link" title="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://t.me/benqxc" class="social-link" title="Telegram">
+                    <i class="fab fa-telegram"></i>
+                </a>
+                <a href="https://gitlab.com/Benqxc" class="social-link" title="GitLab">
+                    <i class="fab fa-gitlab"></i>
+                </a>
+                <a href="https://gitverse.ru/Nobame" class="social-link" title="Gitverse">
+                    <i class="fab fa-git-alt"></i>
+                </a>
+                <a href="https://twitch.tv/benqxc" class="social-link" title="Twitch">
+                    <i class="fab fa-twitch"></i>
+                </a>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p>By Nobame</p>
+            <a href="admin.html" class="admin-link" title="Admin Panel">
+                <i class="fas fa-lock"></i>
+            </a>
+        </footer>
+    </div>
+    
+    <!-- Background Music -->
+    <div class="music-control">
+        <button id="musicToggle" class="music-btn" title="Включить музыку">
+            <i class="fas fa-volume-mute"></i>
+        </button>
+        <audio id="backgroundMusic" loop>
+            <source src="music.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+    
+    <!-- Vercel Speed Insights -->
+    <script src="https://cdn.vercel-insights.com/v1/script.js"></script>
+    <script>
+      window.va = window.va || function() { (window.vaq = window.vaq || []).push(arguments); };
+      va('init', { framework: 'other' });
+    </script>
+    
+    <script src="script.js"></script>
+</body>
+</html>
