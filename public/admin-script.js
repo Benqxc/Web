@@ -165,18 +165,25 @@ document.getElementById('changePasswordForm')?.addEventListener('submit', async 
 // Загрузка статистики
 async function loadStats() {
     try {
-        const response = await fetch('/api/stats');
+        const response = await fetch('/api/stats', {
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
         const stats = await response.json();
         
-        document.getElementById('totalVisitors').textContent = stats.totalVisitors || 0;
-        document.getElementById('uniqueIPs').textContent = stats.uniqueIPs || 0;
-        document.getElementById('todayVisitors').textContent = stats.todayVisitors || 0;
-        document.getElementById('weekVisitors').textContent = stats.weekVisitors || 0;
+        // Анимированное обновление счетчиков
+        animateValue('totalVisitors', stats.totalVisitors || 0);
+        animateValue('uniqueIPs', stats.uniqueIPs || 0);
+        animateValue('todayVisitors', stats.todayVisitors || 0);
+        animateValue('weekVisitors', stats.weekVisitors || 0);
+        
         document.getElementById('avgDuration').textContent = (stats.avgSessionDuration || 0) + 'с';
         
         if (stats.lastVisit) {
             const lastDate = new Date(stats.lastVisit);
-            document.getElementById('lastVisit').textContent = lastDate.toLocaleDateString('ru-RU');
+            document.getElementById('lastVisit').textContent = lastDate.toLocaleDateString('ru-RU') + ' ' +
+                lastDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
         } else {
             document.getElementById('lastVisit').textContent = '-';
         }
@@ -187,6 +194,32 @@ async function loadStats() {
         console.error('Stats load error:', error);
         showToast('Не удалось загрузить статистику', 'error');
     }
+}
+
+// Анимация чисел
+function animateValue(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const start = parseInt(element.textContent) || 0;
+    const end = value;
+    const duration = 1000;
+    const startTime = Date.now();
+    
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(start + (end - start) * ease);
+        
+        element.textContent = current.toLocaleString('ru-RU');
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    }
+    
+    requestAnimationFrame(animate);
 }
 
 // ============================================

@@ -7,25 +7,61 @@ const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
 const useragent = require('useragent');
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+
+// Security middleware
 app.use(helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    xFrameOptions: { action: 'sameorigin' },
+    xContentTypeOptions: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
-app.use(cors());
-app.use(express.json());
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
 // Rate limiting для защиты от перебора паролей
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 минут
-    max: 5, // 5 попыток
-    message: { error: 'Слишком много попыток входа. Попробуйте позже.' }
+    windowMs: parseInt(process.env.LOGIN_RATE_WINDOW_MS) || 15 * 60 * 1000,
+    max: parseInt(process.env.LOGIN_RATE_LIMIT) || 5,
+    message: { error: 'Слишком много попыток входа. Попробуйте позже.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        return req.headers['x-forwarded-for']?.split(',')[0] ||
+               req.headers['x-real-ip'] ||
+               req.connection.remoteAddress || 'unknown';
+    }
 });
+
+// Общий rate limiter для API
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 минута
+    max: 100, // 100 запросов в минуту
+    message: { error: 'Слишком много запросов. Попробуйте позже.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+app.use('/api/', apiLimiter);
 
 // Инициализация PostgreSQL
 const pool = new Pool({
@@ -75,10 +111,16 @@ async function initDatabase() {
             )
         `);
 
-        // Установка пароля по умолчанию если нет
+        // Установка пароля из переменной окружения или пароля по умолчанию
         const adminPasswordCheck = await client.query('SELECT * FROM admin_password WHERE id = 1');
         if (adminPasswordCheck.rows.length === 0) {
-            const defaultPassword = bcrypt.hashSync('admin123', 10);
+            const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+            if (process.env.ADMIN_PASSWORD) {
+                console.log('Using ADMIN_PASSWORD from environment');
+            } else {
+                console.warn('WARNING: Using default password. Set ADMIN_PASSWORD environment variable!');
+            }
+            const defaultPassword = bcrypt.hashSync(adminPassword, 10);
             await client.query('INSERT INTO admin_password (id, password_hash) VALUES (1, $1)', [defaultPassword]);
         }
 
@@ -266,13 +308,28 @@ app.get('/api/stats', async (req, res) => {
         
         // Топ ОС
         const osResult = await client.query(`
-            SELECT os, COUNT(*) as count 
-            FROM visitors 
-            GROUP BY os 
-            ORDER BY count DESC 
+            SELECT os, COUNT(*) as count
+            FROM visitors
+            GROUP BY os
+            ORDER BY count DESC
             LIMIT 5
         `);
         stats.topOS = osResult.rows;
+        
+        // Посещения по дням (последние 7 дней)
+        const visitsByDayResult = await client.query(`
+            SELECT
+                TO_CHAR(DATE(CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '1 day' * generate_series(0, 6)), 'DD.MM') as day,
+                COUNT(CASE WHEN DATE(created_at) = CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '1 day' * generate_series(0, 6) THEN 1 END) as count
+            FROM visitors
+            WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+            GROUP BY DATE(CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '1 day' * generate_series(0, 6))
+            ORDER BY DATE(CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '1 day' * generate_series(0, 6))
+        `);
+        stats.visitsByDay = visitsByDayResult.rows.map(row => ({
+            day: row.day,
+            count: parseInt(row.count)
+        }));
         
         res.json(stats);
     } catch (error) {

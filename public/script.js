@@ -252,6 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Загрузка счетчика просмотров
     loadViewCount();
     
+    // Загрузка GitHub репозиториев
+    loadGitHubRepos();
+    
     // Скрываем лоадер после загрузки
     window.addEventListener('load', hideLoader);
     
@@ -298,18 +301,69 @@ function animateCounter(element, start, end, duration) {
 }
 
 // ============================================
-// GitHub API - загрузка репозиториев
+// GitHub API - загрузка репозиториев с кэшированием
 // ============================================
+const GITHUB_CACHE_KEY = 'github_repos_cache';
+const GITHUB_CACHE_DURATION = 60 * 60 * 1000; // 1 час
+
+function getCachedRepos() {
+    try {
+        const cached = localStorage.getItem(GITHUB_CACHE_KEY);
+        if (!cached) return null;
+        
+        const { data, timestamp } = JSON.parse(cached);
+        const isExpired = Date.now() - timestamp > GITHUB_CACHE_DURATION;
+        
+        return isExpired ? null : data;
+    } catch (e) {
+        return null;
+    }
+}
+
+function cacheRepos(repos) {
+    try {
+        localStorage.setItem(GITHUB_CACHE_KEY, JSON.stringify({
+            data: repos,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        console.warn('Failed to cache GitHub repos:', e);
+    }
+}
+
 async function loadGitHubRepos() {
     const reposGrid = document.getElementById('reposGrid');
     if (!reposGrid) return;
     
     const username = 'Benqxc';
     
+    // Показываем skeleton loader
+    reposGrid.innerHTML = `
+        <div class="repo-card loading">
+            <div class="repo-skeleton"></div>
+        </div>
+        <div class="repo-card loading">
+            <div class="repo-skeleton"></div>
+        </div>
+        <div class="repo-card loading">
+            <div class="repo-skeleton"></div>
+        </div>
+    `;
+    
+    // Проверяем кэш
+    const cachedRepos = getCachedRepos();
+    if (cachedRepos) {
+        renderRepos(reposGrid, cachedRepos);
+        return;
+    }
+    
     try {
         const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=6`);
         
         if (!response.ok) {
+            if (response.status === 403) {
+                throw new Error('GitHub API rate limit exceeded');
+            }
             throw new Error('GitHub API error');
         }
         
@@ -318,30 +372,41 @@ async function loadGitHubRepos() {
         // Сортируем по количеству звёзд
         const sortedRepos = repos.sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 3);
         
-        reposGrid.innerHTML = sortedRepos.map(repo => `
-            <div class="repo-card">
-                <div class="repo-name">
-                    <i class="fab fa-github"></i>
-                    <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">${repo.name}</a>
-                </div>
-                <p class="repo-description">${repo.description || 'Нет описания'}</p>
-                <div class="repo-stats">
-                    <span><i class="fas fa-star"></i> ${repo.stargazers_count}</span>
-                    <span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span>
-                    <span><i class="fas fa-circle"></i> ${repo.language || 'Unknown'}</span>
-                </div>
-            </div>
-        `).join('');
+        // Кэшируем результат
+        cacheRepos(sortedRepos);
+        
+        renderRepos(reposGrid, sortedRepos);
         
     } catch (error) {
         console.error('Failed to load GitHub repos:', error);
         reposGrid.innerHTML = `
-            <div class="repo-card">
+            <div class="repo-card error-card">
+                <i class="fas fa-exclamation-triangle"></i>
                 <p class="repo-description">Не удалось загрузить репозитории</p>
+                <button class="retry-btn" onclick="loadGitHubRepos()">
+                    <i class="fas fa-redo"></i> Повторить
+                </button>
             </div>
         `;
         showToast('Не удалось загрузить GitHub репозитории', 'error');
     }
+}
+
+function renderRepos(container, repos) {
+    container.innerHTML = repos.map(repo => `
+        <div class="repo-card">
+            <div class="repo-name">
+                <i class="fab fa-github"></i>
+                <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">${repo.name}</a>
+            </div>
+            <p class="repo-description">${repo.description || 'Нет описания'}</p>
+            <div class="repo-stats">
+                <span><i class="fas fa-star"></i> ${repo.stargazers_count}</span>
+                <span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span>
+                <span><i class="fas fa-circle"></i> ${repo.language || 'Unknown'}</span>
+            </div>
+        </div>
+    `).join('');
 }
 
 // ============================================
