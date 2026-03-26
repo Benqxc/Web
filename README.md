@@ -1,61 +1,61 @@
-# Nobame Bio Site v2.0
+ Биосайт Нобаме
 
 Персональный сайт-визитка с системой отслеживания посетителей и улучшенной безопасностью.
 
 ## 🚀 Быстрый старт
 
-### Развёртывание на Railway
+### Развёртывание на Железная дорога
 
-1. Создайте новый проект на [Railway](https://railway.app)
+1. Создайте новый проект на [Железная дорога](https://railway.app)
 2. Подключите GitHub репозиторий
 3. Настройте переменные окружения (см. ниже)
-4. Railway автоматически обнаружит `package.json` и развернёт приложение
+4. Железная дорога автоматически обнаружит `пакет.json` и развернёт приложение
 
 ### Переменные окружения
 
-Скопируйте `.env.example` в `.env` и настройте:
+Скопируйте `. . . .env.пример` в `. . . .env` и настройте:
 
-```bash
-# PostgreSQL (для Railway)
-DATABASE_URL=postgresql://user:password@host:port/database
+```баш
+# PostgreSQL (для железной дороги)
+DATABASE_URL=postgresql://пользователь:password@host:порт/база данных
 
 # Безопасность
-ADMIN_PASSWORD=your_secure_password_here
-JWT_SECRET=your_jwt_secret_here
+ADMIN_PASSWORD=ваш_безопасный_пароль_здесь
+JWT_SECRET=ваш_jwt_secret_здесь
 
-# CORS
-ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
+# КОРС
+РАЗРЕШЕННЫЕ_ИСТОЧНИКИ=http://localhost:3000,https://yourdomain.com
 
-# Rate Limiting
+# Ограничение скорости
 LOGIN_RATE_LIMIT=5
-LOGIN_RATE_WINDOW_MS=900000
+СКОРОСТЬ_ВХОДА_ОКНО_МС=900000
 
 # Сервер
-PORT=3000
-NODE_ENV=production
+ПОРТ=3000
+NODE_ENV=производство
 ```
 
 ## 📁 Структура проекта
 
 ```
-├── __tests__/           # Тесты
-│   └── api.test.js
-├── api/                 # Vercel Serverless функции
-│   ├── track.js
-│   ├── login.js
-│   ├── stats.js
-│   ├── visitors.js
-│   ├── export.js
-│   └── change-password.js
-├── public/              # Статические файлы
-│   ├── index.html
-│   ├── admin.html
-│   ├── styles.css
-│   ├── admin-styles.css
-│   ├── script.js
-│   ├── admin-script.js
-│   ├── sw.js           # Service Worker
-│   └── manifest.json   # PWA манифест
+├── __тесты__/ # Тесты
+│ └── api.test.js
+├── api/ # Vercel Serverless фанкии
+│ ├── трек.js
+│ ├── login.js
+│ ├── статисикикика.js
+│ ├── сайт.js
+│ ├── экспорт.js
+│ └── изменить-пароль.js
+├── публичный/ # Статические фаилы
+│ ├── индекс.html
+│ ├── admin.html
+│ ├── стили.css
+│ ├── admin-styles.css
+│ ├── скрипт.js
+│ ├── admin-script.js
+│ ├── sw.js # Сервисный работник
+│ └── manifest.json # PWA манифест
 ├── server.js           # Express сервер (Railway)
 ├── package.json
 ├── jest.config.js      # Конфигурация Jest
