@@ -1,10 +1,11 @@
 const { kv } = require('@vercel/kv');
+const { isAuthorized, unauthorized } = require('../lib/auth');
 
 module.exports = async (req, res) => {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -12,6 +13,11 @@ module.exports = async (req, res) => {
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Статистика доступна только администратору
+  if (!(await isAuthorized(req))) {
+    return unauthorized(res);
   }
 
   try {

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const rateLimit = require('express-rate-limit');
 const { RedisStore } = require('rate-limit-redis');
+const { storeToken } = require('../lib/auth');
 
 // Rate limiting store для Redis
 const store = new RedisStore({
@@ -72,6 +73,7 @@ module.exports = async (req, res) => {
       
       if (password === adminPassword) {
         const token = uuidv4();
+        await storeToken(token);
         return res.status(200).json({
           success: true,
           token,
@@ -83,6 +85,7 @@ module.exports = async (req, res) => {
 
     if (bcrypt.compareSync(password, storedHash)) {
       const token = uuidv4();
+      await storeToken(token);
       res.status(200).json({
         success: true,
         token,

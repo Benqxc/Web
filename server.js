@@ -12,6 +12,10 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// За обратным прокси (Railway/Vercel/nginx) доверяем первому хопу,
+// чтобы req.ip брался из X-Forwarded-For и rate limit считался по клиенту
+app.set('trust proxy', 1);
+
 // CORS configuration
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
 app.use(cors({
@@ -36,20 +40,16 @@ app.use(helmet({
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Rate limiting для защиты от перебора паролей
+// keyGenerator не нужен: с trust proxy дефолтный ключ — корректный req.ip
 const loginLimiter = rateLimit({
     windowMs: parseInt(process.env.LOGIN_RATE_WINDOW_MS) || 15 * 60 * 1000,
     max: parseInt(process.env.LOGIN_RATE_LIMIT) || 5,
     message: { error: 'Слишком много попыток входа. Попробуйте позже.' },
     standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req) => {
-        return req.headers['x-forwarded-for']?.split(',')[0] ||
-               req.headers['x-real-ip'] ||
-               req.connection.remoteAddress || 'unknown';
-    }
+    legacyHeaders: false
 });
 
 // Общий rate limiter для API
@@ -70,6 +70,46 @@ const pool = new Pool({
         rejectUnauthorized: false
     } : false
 });
+
+// ===== Сессии администратора =====
+// Токены выдаются при входе и проверяются на админских эндпоинтах.
+// Раньше токен возвращался, но нигде не проверялся — все данные
+// посетителей и их удаление были доступны без авторизации.
+const TOKEN_TTL_MS = parseInt(process.env.ADMIN_TOKEN_TTL_MS) || 24 * 60 * 60 * 1000;
+const adminTokens = new Map(); // token -> expiresAt (ms)
+
+function issueToken() {
+    const token = uuidv4();
+    adminTokens.set(token, Date.now() + TOKEN_TTL_MS);
+    return token;
+}
+
+function isValidToken(token) {
+    const expiresAt = adminTokens.get(token);
+    if (!expiresAt) return false;
+    if (Date.now() > expiresAt) {
+        adminTokens.delete(token);
+        return false;
+    }
+    return true;
+}
+
+// Периодическая очистка истёкших токенов
+setInterval(() => {
+    const now = Date.now();
+    for (const [token, expiresAt] of adminTokens) {
+        if (now > expiresAt) adminTokens.delete(token);
+    }
+}, 60 * 60 * 1000).unref();
+
+function requireAuth(req, res, next) {
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+    if (!token || !isValidToken(token)) {
+        return res.status(401).json({ error: 'Требуется авторизация' });
+    }
+    next();
+}
 
 // Создание таблиц
 async function initDatabase() {
@@ -145,10 +185,8 @@ app.post('/api/track', async (req, res) => {
             sessionDuration 
         } = req.body;
         
-        const ip = req.headers['x-forwarded-for']?.split(',')[0] || 
-                   req.headers['x-real-ip'] || 
-                   req.connection.remoteAddress ||
-                   'unknown';
+        // req.ip учитывает X-Forwarded-For благодаря trust proxy
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown';
         
         const agent = useragent.parse(req.headers['user-agent'] || '');
         const visitorId = sessionId || uuidv4();
@@ -228,7 +266,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         const adminRecord = await client.query('SELECT * FROM admin_password WHERE id = 1');
         
         if (adminRecord.rows.length > 0 && bcrypt.compareSync(password, adminRecord.rows[0].password_hash)) {
-            const token = uuidv4();
+            const token = issueToken();
             res.json({ 
                 success: true, 
                 token,
@@ -246,7 +284,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 });
 
 // API: Получение статистики
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const stats = {};
@@ -316,15 +354,19 @@ app.get('/api/stats', async (req, res) => {
         `);
         stats.topOS = osResult.rows;
         
-        // Посещения по дням (последние 7 дней)
+        // Посещения по дням (последние 7 дней, включая дни без посещений)
         const visitsByDayResult = await client.query(`
             SELECT
-                TO_CHAR(DATE(CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '1 day' * generate_series(0, 6)), 'DD.MM') as day,
-                COUNT(CASE WHEN DATE(created_at) = CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '1 day' * generate_series(0, 6) THEN 1 END) as count
-            FROM visitors
-            WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
-            GROUP BY DATE(CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '1 day' * generate_series(0, 6))
-            ORDER BY DATE(CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '1 day' * generate_series(0, 6))
+                TO_CHAR(d.day, 'DD.MM') as day,
+                COUNT(v.id) as count
+            FROM generate_series(
+                CURRENT_DATE - INTERVAL '6 days',
+                CURRENT_DATE,
+                INTERVAL '1 day'
+            ) AS d(day)
+            LEFT JOIN visitors v ON DATE(v.created_at) = d.day::date
+            GROUP BY d.day
+            ORDER BY d.day
         `);
         stats.visitsByDay = visitsByDayResult.rows.map(row => ({
             day: row.day,
@@ -341,7 +383,7 @@ app.get('/api/stats', async (req, res) => {
 });
 
 // API: Получение всех посетителей
-app.get('/api/visitors', async (req, res) => {
+app.get('/api/visitors', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const visitors = await client.query(`
@@ -359,10 +401,17 @@ app.get('/api/visitors', async (req, res) => {
 });
 
 // API: Экспорт в CSV
-app.get('/api/export/csv', async (req, res) => {
+app.get('/api/export/csv', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const visitors = await client.query('SELECT * FROM visitors ORDER BY created_at DESC');
+        
+        // Экранирование значений CSV: кавычки, запятые и переводы строк
+        // (например, в user agent) ломали структуру файла
+        const csvEscape = (value) => {
+            const str = String(value ?? '');
+            return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+        };
         
         const headers = ['ID', 'IP', 'Страна', 'Город', 'Браузер', 'ОС', 'Разрешение', 'Время на сайте (сек)', 'Дата'];
         const csvRows = [headers.join(',')];
@@ -378,7 +427,7 @@ app.get('/api/export/csv', async (req, res) => {
                 v.screen_resolution,
                 v.session_duration,
                 v.created_at
-            ].join(','));
+            ].map(csvEscape).join(','));
         });
         
         res.setHeader('Content-Type', 'text/csv');
@@ -393,7 +442,7 @@ app.get('/api/export/csv', async (req, res) => {
 });
 
 // API: Экспорт в JSON
-app.get('/api/export/json', async (req, res) => {
+app.get('/api/export/json', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const visitors = await client.query('SELECT * FROM visitors ORDER BY created_at DESC');
@@ -410,7 +459,7 @@ app.get('/api/export/json', async (req, res) => {
 });
 
 // API: Очистка данных
-app.delete('/api/visitors', async (req, res) => {
+app.delete('/api/visitors', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('DELETE FROM visitors');
@@ -424,10 +473,14 @@ app.delete('/api/visitors', async (req, res) => {
 });
 
 // API: Смена пароля
-app.post('/api/change-password', async (req, res) => {
+app.post('/api/change-password', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const { currentPassword, newPassword } = req.body;
+        
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({ error: 'Новый пароль должен быть не короче 6 символов' });
+        }
         
         const adminRecord = await client.query('SELECT * FROM admin_password WHERE id = 1');
         
@@ -461,4 +514,10 @@ async function startServer() {
     }
 }
 
-startServer();
+// Запускаем сервер только при прямом запуске файла,
+// чтобы тесты могли подключить app без старта listen()
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = app;

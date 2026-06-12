@@ -1,11 +1,12 @@
 const { kv } = require('@vercel/kv');
 const bcrypt = require('bcryptjs');
+const { isAuthorized, unauthorized } = require('../lib/auth');
 
 module.exports = async (req, res) => {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -15,8 +16,17 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Смена пароля доступна только администратору
+  if (!(await isAuthorized(req))) {
+    return unauthorized(res);
+  }
+
   try {
     const { currentPassword, newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Новый пароль должен быть не короче 6 символов' });
+    }
 
     // Получаем текущий хэш
     const storedHash = await kv.get('admin_password');

@@ -1,10 +1,11 @@
 const { kv } = require('@vercel/kv');
+const { isAuthorized, unauthorized } = require('../lib/auth');
 
 module.exports = async (req, res) => {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -12,6 +13,11 @@ module.exports = async (req, res) => {
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Экспорт данных доступен только администратору
+  if (!(await isAuthorized(req))) {
+    return unauthorized(res);
   }
 
   try {
@@ -31,6 +37,12 @@ module.exports = async (req, res) => {
 
     // CSV экспорт
     if (req.query.format === 'csv') {
+      // Экранирование: кавычки, запятые и переводы строк ломали структуру CSV
+      const csvEscape = (value) => {
+        const str = String(value ?? '');
+        return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+      };
+
       const headers = ['ID', 'IP', 'Страна', 'Город', 'Браузер', 'ОС', 'Разрешение', 'Время на сайте (сек)', 'Дата'];
       const csvRows = [headers.join(',')];
 
@@ -45,7 +57,7 @@ module.exports = async (req, res) => {
           v.screen_resolution,
           v.session_duration,
           v.created_at
-        ].join(','));
+        ].map(csvEscape).join(','));
       });
 
       res.setHeader('Content-Type', 'text/csv');

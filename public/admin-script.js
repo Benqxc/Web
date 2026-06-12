@@ -32,6 +32,33 @@ function showToast(message, type = 'info', duration = 3000) {
 // ============================================
 let authToken = localStorage.getItem('admin_token');
 
+// Заголовки с токеном авторизации для админских запросов
+function authHeaders(extra = {}) {
+    return authToken
+        ? { ...extra, 'Authorization': `Bearer ${authToken}` }
+        : extra;
+}
+
+// Принудительный выход при невалидном/истёкшем токене
+function handleUnauthorized() {
+    localStorage.removeItem('admin_token');
+    authToken = null;
+    destroyCharts();
+    showLogin();
+    showToast('Сессия истекла, войдите заново', 'error');
+}
+
+// Экранирование HTML: данные посетителя (user agent, страна и т.д.)
+// приходят от клиента и не должны интерпретироваться как разметка
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Графики Chart.js
 let countryChart = null;
 let browserChart = null;
@@ -126,50 +153,16 @@ settingsModal?.addEventListener('click', (e) => {
     }
 });
 
-// Смена пароля
-document.getElementById('changePasswordForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    if (newPassword !== confirmPassword) {
-        alert('Пароли не совпадают');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/change-password', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ currentPassword, newPassword })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            alert('Пароль изменён');
-            settingsModal.classList.remove('active');
-            document.getElementById('changePasswordForm').reset();
-        } else {
-            alert(data.error || 'Ошибка смены пароля');
-        }
-    } catch (error) {
-        alert('Ошибка подключения');
-    }
-});
-
 // Загрузка статистики
 async function loadStats() {
     try {
         const response = await fetch('/api/stats', {
-            headers: {
-                'Cache-Control': 'no-cache'
-            }
+            headers: authHeaders({ 'Cache-Control': 'no-cache' })
         });
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
         const stats = await response.json();
         
         // Анимированное обновление счетчиков
@@ -458,7 +451,11 @@ function destroyCharts() {
 // Загрузка посетителей
 async function loadVisitors() {
     try {
-        const response = await fetch('/api/visitors');
+        const response = await fetch('/api/visitors', { headers: authHeaders() });
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
         const visitors = await response.json();
         
         const tableBody = document.getElementById('visitorsTableBody');
@@ -478,13 +475,14 @@ async function loadVisitors() {
             const formattedDate = date.toLocaleDateString('ru-RU');
             const formattedTime = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
             
+            // escapeHtml защищает от XSS через подменённый User-Agent и пр.
             row.innerHTML = `
                 <span data-label="№">${visitors.length - index}</span>
-                <span class="ip-cell" data-label="IP адрес">${visitor.ip}</span>
-                <span class="country-cell" data-label="Страна">${visitor.country}</span>
-                <span data-label="Браузер">${visitor.browser}</span>
-                <span data-label="ОС">${visitor.os}</span>
-                <span class="duration-cell" data-label="Время">${visitor.session_duration}с</span>
+                <span class="ip-cell" data-label="IP адрес">${escapeHtml(visitor.ip)}</span>
+                <span class="country-cell" data-label="Страна">${escapeHtml(visitor.country)}</span>
+                <span data-label="Браузер">${escapeHtml(visitor.browser)}</span>
+                <span data-label="ОС">${escapeHtml(visitor.os)}</span>
+                <span class="duration-cell" data-label="Время">${escapeHtml(visitor.session_duration)}с</span>
                 <span class="date-cell" data-label="Дата">${formattedDate} ${formattedTime}</span>
             `;
             
@@ -500,8 +498,14 @@ document.getElementById('clearBtn')?.addEventListener('click', async () => {
     if (confirm('Вы уверены, что хотите очистить всю историю посещений?')) {
         try {
             const response = await fetch('/api/visitors', {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: authHeaders()
             });
+            
+            if (response.status === 401) {
+                handleUnauthorized();
+                return;
+            }
             
             if (response.ok) {
                 loadStats();
@@ -515,16 +519,40 @@ document.getElementById('clearBtn')?.addEventListener('click', async () => {
     }
 });
 
+// Скачивание экспорта с токеном авторизации
+// (window.open не может передать заголовок Authorization)
+async function downloadExport(url, filename) {
+    try {
+        const response = await fetch(url, { headers: authHeaders() });
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+        if (!response.ok) {
+            showToast('Ошибка экспорта', 'error');
+            return;
+        }
+        const blob = await response.blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showToast('Экспорт завершён', 'success', 2000);
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('Ошибка экспорта', 'error');
+    }
+}
+
 // Экспорт CSV
 document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
-    window.open('/api/export/csv', '_blank');
-    showToast('Экспорт CSV начат', 'info', 2000);
+    downloadExport('/api/export/csv', 'visitors.csv');
 });
 
 // Экспорт JSON
 document.getElementById('exportJsonBtn')?.addEventListener('click', () => {
-    window.open('/api/export/json', '_blank');
-    showToast('Экспорт JSON начат', 'info', 2000);
+    downloadExport('/api/export/json', 'visitors.json');
 });
 
 // Автообновление каждые 30 секунд
@@ -535,7 +563,8 @@ setInterval(() => {
     }
 }, 30000);
 
-// Обработка закрытия модального окна смены пароля
+// Смена пароля
+// (раньше на форму вешалось два обработчика submit — запрос уходил дважды)
 document.getElementById('changePasswordForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -551,11 +580,19 @@ document.getElementById('changePasswordForm')?.addEventListener('submit', async 
     try {
         const response = await fetch('/api/change-password', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ currentPassword, newPassword })
         });
+        
+        if (response.status === 401) {
+            const data = await response.json().catch(() => ({}));
+            if (data.error === 'Требуется авторизация') {
+                handleUnauthorized();
+                return;
+            }
+            showToast(data.error || 'Текущий пароль неверен', 'error');
+            return;
+        }
         
         const data = await response.json();
         

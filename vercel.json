@@ -12,6 +12,14 @@
   ],
   "routes": [
     {
+      "src": "/api/export/csv",
+      "dest": "/api/export?format=csv"
+    },
+    {
+      "src": "/api/export/json",
+      "dest": "/api/export?format=json"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/$1"
     },
