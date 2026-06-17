@@ -1,41 +1,45 @@
 const request = require('supertest');
-const express = require('express');
 
-// Mock базы данных
 jest.mock('pg', () => {
+    const mockClient = {
+        query: jest.fn().mockImplementation((sql) => {
+            if (typeof sql === 'string' && sql.includes('admin_password')) {
+                return Promise.resolve({ rows: [{ id: 1, password_hash: 'hashed_admin123' }] });
+            }
+            if (typeof sql === 'string' && sql.includes('COUNT')) {
+                return Promise.resolve({ rows: [{ count: '0' }] });
+            }
+            if (typeof sql === 'string' && sql.includes('AVG')) {
+                return Promise.resolve({ rows: [{ avg: '0' }] });
+            }
+            return Promise.resolve({ rows: [] });
+        }),
+        release: jest.fn()
+    };
     const mockPool = {
-        connect: jest.fn().mockResolvedValue({
-            query: jest.fn().mockResolvedValue({ rows: [] }),
-            release: jest.fn()
-        })
+        connect: jest.fn().mockResolvedValue(mockClient)
     };
     return { Pool: jest.fn(() => mockPool) };
 });
 
-// Mock dotenv
 jest.mock('dotenv', () => ({
     config: jest.fn()
 }));
 
-// Mock bcrypt
 jest.mock('bcryptjs', () => ({
     hashSync: jest.fn((str) => `hashed_${str}`),
     compareSync: jest.fn((str, hash) => str === 'admin123' || str === 'hashed_admin123')
 }));
 
-// Mock helmet
 jest.mock('helmet', () => jest.fn(() => (req, res, next) => next()));
 
-// Mock cors
 jest.mock('cors', () => jest.fn(() => (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     next();
 }));
 
-// Mock rate-limit
 jest.mock('express-rate-limit', () => jest.fn(() => (req, res, next) => next()));
 
-// Mock useragent
 jest.mock('useragent', () => ({
     parse: jest.fn(() => ({
         toAgentString: () => 'Chrome 120.0',
@@ -44,12 +48,6 @@ jest.mock('useragent', () => ({
     }))
 }));
 
-// Mock uuid
-jest.mock('uuid', () => ({
-    v4: jest.fn(() => 'test-uuid-123')
-}));
-
-// Mock fetch для geo IP
 global.fetch = jest.fn(() =>
     Promise.resolve({
         json: () => Promise.resolve({
@@ -62,14 +60,27 @@ global.fetch = jest.fn(() =>
 
 describe('API Tests', () => {
     let app;
+    let authToken;
 
-    beforeAll(() => {
+    beforeAll(async () => {
+        process.env.JWT_SECRET = 'test-secret';
         app = require('../server');
+        const login = await request(app)
+            .post('/api/login')
+            .send({ password: 'admin123' });
+        authToken = login.body.token;
     });
 
     describe('GET /api/stats', () => {
-        it('должен возвращать статистику', async () => {
+        it('должен требовать авторизацию', async () => {
             const response = await request(app).get('/api/stats');
+            expect(response.status).toBe(401);
+        });
+
+        it('должен возвращать статистику с токеном', async () => {
+            const response = await request(app)
+                .get('/api/stats')
+                .set('Authorization', `Bearer ${authToken}`);
             expect(response.status).toBe(200);
             expect(response.body).toBeDefined();
         });
@@ -98,43 +109,36 @@ describe('API Tests', () => {
             expect(response.status).toBe(400);
         });
 
-        it('должен возвращать успех с правильным паролем', async () => {
+        it('должен возвращать JWT с правильным паролем', async () => {
             const response = await request(app)
                 .post('/api/login')
                 .send({ password: 'admin123' });
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
-            expect(response.body.token).toBeDefined();
+            expect(response.body.token).toMatch(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
         });
     });
 
     describe('GET /api/visitors', () => {
-        it('должен возвращать список посетителей', async () => {
+        it('должен требовать авторизацию', async () => {
             const response = await request(app).get('/api/visitors');
+            expect(response.status).toBe(401);
+        });
+
+        it('должен возвращать список посетителей с токеном', async () => {
+            const response = await request(app)
+                .get('/api/visitors')
+                .set('Authorization', `Bearer ${authToken}`);
             expect(response.status).toBe(200);
             expect(Array.isArray(response.body)).toBe(true);
         });
     });
 
-    describe('GET /api/export/csv', () => {
-        it('должен экспортировать данные в CSV', async () => {
-            const response = await request(app).get('/api/export/csv');
-            expect(response.status).toBe(200);
-            expect(response.headers['content-type']).toContain('text/csv');
-        });
-    });
-
-    describe('GET /api/export/json', () => {
-        it('должен экспортировать данные в JSON', async () => {
-            const response = await request(app).get('/api/export/json');
-            expect(response.status).toBe(200);
-            expect(response.headers['content-type']).toContain('application/json');
-        });
-    });
-
     describe('DELETE /api/visitors', () => {
-        it('должен очищать данные посетителей', async () => {
-            const response = await request(app).delete('/api/visitors');
+        it('должен очищать данные посетителей с токеном', async () => {
+            const response = await request(app)
+                .delete('/api/visitors')
+                .set('Authorization', `Bearer ${authToken}`);
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
         });

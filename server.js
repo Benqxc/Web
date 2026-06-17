@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
 const useragent = require('useragent');
 const path = require('path');
+const { signAuthToken, resolveAdminPassword, expressRequireAuth } = require('./lib/auth');
 require('dotenv').config();
 
 const app = express();
@@ -111,14 +112,11 @@ async function initDatabase() {
             )
         `);
 
-        // Установка пароля из переменной окружения или пароля по умолчанию
         const adminPasswordCheck = await client.query('SELECT * FROM admin_password WHERE id = 1');
         if (adminPasswordCheck.rows.length === 0) {
-            const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+            const adminPassword = resolveAdminPassword();
             if (process.env.ADMIN_PASSWORD) {
                 console.log('Using ADMIN_PASSWORD from environment');
-            } else {
-                console.warn('WARNING: Using default password. Set ADMIN_PASSWORD environment variable!');
             }
             const defaultPassword = bcrypt.hashSync(adminPassword, 10);
             await client.query('INSERT INTO admin_password (id, password_hash) VALUES (1, $1)', [defaultPassword]);
@@ -157,7 +155,7 @@ app.post('/api/track', async (req, res) => {
         let country = 'Unknown';
         let city = 'Unknown';
         try {
-            const geoResponse = await fetch(`http://ip-api.com/json/${ip}`);
+            const geoResponse = await fetch(`https://ip-api.com/json/${ip}?fields=status,country,city`);
             const geoData = await geoResponse.json();
             if (geoData.status === 'success') {
                 country = geoData.country || 'Unknown';
@@ -228,9 +226,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         const adminRecord = await client.query('SELECT * FROM admin_password WHERE id = 1');
         
         if (adminRecord.rows.length > 0 && bcrypt.compareSync(password, adminRecord.rows[0].password_hash)) {
-            const token = uuidv4();
-            res.json({ 
-                success: true, 
+            const token = signAuthToken();
+            res.json({
+                success: true,
                 token,
                 message: 'Успешный вход'
             });
@@ -245,8 +243,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 });
 
-// API: Получение статистики
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', expressRequireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const stats = {};
@@ -340,8 +337,7 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
-// API: Получение всех посетителей
-app.get('/api/visitors', async (req, res) => {
+app.get('/api/visitors', expressRequireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const visitors = await client.query(`
@@ -358,8 +354,7 @@ app.get('/api/visitors', async (req, res) => {
     }
 });
 
-// API: Экспорт в CSV
-app.get('/api/export/csv', async (req, res) => {
+app.get('/api/export/csv', expressRequireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const visitors = await client.query('SELECT * FROM visitors ORDER BY created_at DESC');
@@ -392,8 +387,7 @@ app.get('/api/export/csv', async (req, res) => {
     }
 });
 
-// API: Экспорт в JSON
-app.get('/api/export/json', async (req, res) => {
+app.get('/api/export/json', expressRequireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const visitors = await client.query('SELECT * FROM visitors ORDER BY created_at DESC');
@@ -409,8 +403,7 @@ app.get('/api/export/json', async (req, res) => {
     }
 });
 
-// API: Очистка данных
-app.delete('/api/visitors', async (req, res) => {
+app.delete('/api/visitors', expressRequireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('DELETE FROM visitors');
@@ -423,8 +416,7 @@ app.delete('/api/visitors', async (req, res) => {
     }
 });
 
-// API: Смена пароля
-app.post('/api/change-password', async (req, res) => {
+app.post('/api/change-password', expressRequireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const { currentPassword, newPassword } = req.body;
@@ -461,4 +453,8 @@ async function startServer() {
     }
 }
 
-startServer();
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = app;

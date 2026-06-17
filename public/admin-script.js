@@ -32,6 +32,39 @@ function showToast(message, type = 'info', duration = 3000) {
 // ============================================
 let authToken = localStorage.getItem('admin_token');
 
+function authHeaders(extra = {}) {
+    return {
+        ...extra,
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+    };
+}
+
+async function handleUnauthorized(response) {
+    if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        authToken = null;
+        showLogin();
+        showToast('Сессия истекла. Войдите снова.', 'error');
+        return true;
+    }
+    return false;
+}
+
+async function downloadProtectedFile(url, filename) {
+    const response = await fetch(url, { headers: authHeaders() });
+    if (await handleUnauthorized(response)) return;
+    if (!response.ok) {
+        showToast('Ошибка экспорта', 'error');
+        return;
+    }
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
+}
+
 // Графики Chart.js
 let countryChart = null;
 let browserChart = null;
@@ -142,11 +175,11 @@ document.getElementById('changePasswordForm')?.addEventListener('submit', async 
     try {
         const response = await fetch('/api/change-password', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ currentPassword, newPassword })
         });
+
+        if (await handleUnauthorized(response)) return;
         
         const data = await response.json();
         
@@ -166,10 +199,9 @@ document.getElementById('changePasswordForm')?.addEventListener('submit', async 
 async function loadStats() {
     try {
         const response = await fetch('/api/stats', {
-            headers: {
-                'Cache-Control': 'no-cache'
-            }
+            headers: authHeaders({ 'Cache-Control': 'no-cache' })
         });
+        if (await handleUnauthorized(response)) return;
         const stats = await response.json();
         
         // Анимированное обновление счетчиков
@@ -458,7 +490,10 @@ function destroyCharts() {
 // Загрузка посетителей
 async function loadVisitors() {
     try {
-        const response = await fetch('/api/visitors');
+        const response = await fetch('/api/visitors', {
+            headers: authHeaders()
+        });
+        if (await handleUnauthorized(response)) return;
         const visitors = await response.json();
         
         const tableBody = document.getElementById('visitorsTableBody');
@@ -500,8 +535,11 @@ document.getElementById('clearBtn')?.addEventListener('click', async () => {
     if (confirm('Вы уверены, что хотите очистить всю историю посещений?')) {
         try {
             const response = await fetch('/api/visitors', {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: authHeaders()
             });
+
+            if (await handleUnauthorized(response)) return;
             
             if (response.ok) {
                 loadStats();
@@ -517,13 +555,13 @@ document.getElementById('clearBtn')?.addEventListener('click', async () => {
 
 // Экспорт CSV
 document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
-    window.open('/api/export/csv', '_blank');
+    downloadProtectedFile('/api/export/csv', 'visitors.csv');
     showToast('Экспорт CSV начат', 'info', 2000);
 });
 
 // Экспорт JSON
 document.getElementById('exportJsonBtn')?.addEventListener('click', () => {
-    window.open('/api/export/json', '_blank');
+    downloadProtectedFile('/api/export/json', 'visitors.json');
     showToast('Экспорт JSON начат', 'info', 2000);
 });
 
@@ -534,42 +572,6 @@ setInterval(() => {
         loadVisitors();
     }
 }, 30000);
-
-// Обработка закрытия модального окна смены пароля
-document.getElementById('changePasswordForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    if (newPassword !== confirmPassword) {
-        showToast('Пароли не совпадают', 'error');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/change-password', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ currentPassword, newPassword })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('Пароль изменён', 'success');
-            document.getElementById('settingsModal').classList.remove('active');
-            document.getElementById('changePasswordForm').reset();
-        } else {
-            showToast(data.error || 'Ошибка смены пароля', 'error');
-        }
-    } catch (error) {
-        showToast('Ошибка подключения', 'error');
-    }
-});
 
 // Инициализация
 checkAuth();
