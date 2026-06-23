@@ -1,217 +1,112 @@
- Биосайт Нобаме
+<div align="center">
 
-Персональный сайт-визитка с системой отслеживания посетителей и улучшенной безопасностью.
+# Web
 
-## 🚀 Быстрый старт
+**`_ud2`** · [Benqxc](https://github.com/Benqxc)
 
-### Развёртывание на Железная дорога
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://github.com/Benqxc/Web)
+[![Express](https://img.shields.io/badge/Express-API-000000?style=flat-square&logo=express&logoColor=white)](https://github.com/Benqxc/Web)
+[![PWA](https://img.shields.io/badge/PWA-ready-7B61FF?style=flat-square)](https://github.com/Benqxc/Web)
 
-1. Создайте новый проект на [Железная дорога](https://railway.app)
-2. Подключите GitHub репозиторий
-3. Настройте переменные окружения (см. ниже)
-4. Железная дорога автоматически обнаружит `пакет.json` и развернёт приложение
+</div>
+
+---
+
+Персональный био-сайт с отслеживанием посетителей, админ-панелью и PWA.
+
+## Быстрый старт
+
+### Railway
+
+1. Создай проект на [Railway](https://railway.app)
+2. Подключи этот репозиторий
+3. Задай переменные окружения (см. ниже)
+4. Деплой запустится автоматически по `package.json`
 
 ### Переменные окружения
 
-Скопируйте `. . . .env.пример` в `. . . .env` и настройте:
+Скопируй `.env.example` в `.env`:
 
-```баш
-# PostgreSQL (для железной дороги)
-DATABASE_URL=postgresql://пользователь:password@host:порт/база данных
+```env
+# PostgreSQL (Railway)
+DATABASE_URL=postgresql://user:password@host:port/database
 
-# Безопасность
-ADMIN_PASSWORD=ваш_безопасный_пароль_здесь
-JWT_SECRET=ваш_jwt_secret_здесь
+# Security
+ADMIN_PASSWORD=your_secure_password
+JWT_SECRET=your_jwt_secret
 
-# КОРС
-РАЗРЕШЕННЫЕ_ИСТОЧНИКИ=http://localhost:3000,https://yourdomain.com
+# CORS
+ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
 
-# Ограничение скорости
+# Rate limiting
 LOGIN_RATE_LIMIT=5
-СКОРОСТЬ_ВХОДА_ОКНО_МС=900000
+LOGIN_RATE_WINDOW_MS=900000
 
-# Сервер
-ПОРТ=3000
-NODE_ENV=производство
+# Server
+PORT=3000
+NODE_ENV=production
 ```
 
-## 📁 Структура проекта
+## Структура
 
 ```
-├── __тесты__/ # Тесты
-│ └── api.test.js
-├── api/ # Vercel Serverless фанкии
-│ ├── трек.js
-│ ├── login.js
-│ ├── статисикикика.js
-│ ├── сайт.js
-│ ├── экспорт.js
-│ └── изменить-пароль.js
-├── публичный/ # Статические фаилы
-│ ├── индекс.html
-│ ├── admin.html
-│ ├── стили.css
-│ ├── admin-styles.css
-│ ├── скрипт.js
-│ ├── admin-script.js
-│ ├── sw.js # Сервисный работник
-│ └── manifest.json # PWA манифест
-├── server.js           # Express сервер (Railway)
+├── __tests__/          # API tests
+├── api/                # Vercel serverless functions
+├── public/             # Static assets (PWA, admin UI)
+├── server.js           # Express server (Railway)
 ├── package.json
-├── jest.config.js      # Конфигурация Jest
-└── .env.example        # Шаблон переменных окружения
+└── .env.example
 ```
 
-## 🔒 Безопасность (v2.0)
-
-### Новые функции безопасности:
-
-- **Пароль из переменной окружения** - `ADMIN_PASSWORD` вместо хардкода
-- **Rate Limiting** - 5 попыток входа за 15 минут (настраивается)
-- **CORS с белым списком** - только разрешённые домены
-- **Helmet.js** - защищённые HTTP заголовки
-- **Хеширование bcrypt** - надёжное хранение паролей
-
-### Рекомендуемые действия:
-
-1. Установите сложный `ADMIN_PASSWORD`
-2. Настройте `ALLOWED_ORIGINS` для вашего домена
-3. Используйте HTTPS в продакшене
-
-## 📊 Функции
+## Функции
 
 ### Для посетителей
-- Анимированный фон с градиентом
-- 3D эффект наклона карточки
-- Анимация печатания имени
-- Фоновая музыка (по кнопке)
-- Эффект частиц при клике
-- **Тёмная/светлая тема с переключателем**
-- **Индикатор загрузки (лоадер)**
-- **Раздел "Обо мне" с навыками**
-- **GitHub API интеграция (кэширование 1 час)**
-- **PWA поддержка (офлайн режим)**
-- **Система уведомлений (Toast)**
+
+- Анимированный фон, 3D-карточка, typing-эффект
+- Тёмная / светлая тема
+- GitHub API интеграция (кэш 1 час)
+- PWA и офлайн-режим
 
 ### Для администратора
-- Просмотр всех посетителей
-- IP адреса, страны, города
-- Информация об устройстве (браузер, ОС)
-- Время на сайте
-- Топ стран, браузеров, ОС
-- **Интерактивные графики Chart.js**
-- **График посещений по дням**
-- **Анимированные счетчики**
-- Экспорт в CSV/JSON
-- Смена пароля
-- Очистка истории
 
-## 🎵 Музыка
+- Трекинг IP, страны, устройства, времени на сайте
+- Графики Chart.js, экспорт CSV/JSON
+- Смена пароля, очистка истории
 
-Добавьте файл `music.mp3` в папку `public/` для фоновой музыки.
+## Безопасность
 
-## 📱 PWA
+- Пароль из `ADMIN_PASSWORD`, bcrypt-хеширование
+- Rate limiting на логин (5 попыток / 15 мин)
+- CORS whitelist, Helmet.js
 
-Сайт поддерживает Progressive Web App:
-- Работает офлайн
-- Может быть установлен на домашний экран
-- Быстрая загрузка благодаря кэшированию
-
-## 🔧 Локальная разработка
+## Локальная разработка
 
 ```bash
-# Установка зависимостей
 npm install
-
-# Запуск в режиме разработки
-npm run dev
-
-# Запуск в продакшен режиме
-npm start
-
-# Запуск тестов
-npm test
-
-# Тесты с покрытием
-npm run test:coverage
+npm run dev      # development
+npm start        # production
+npm test         # tests
 ```
 
-Откройте http://localhost:3000
+Открой http://localhost:3000
 
-## 🧪 Тестирование
-
-```bash
-# Запустить все тесты
-npm test
-
-# Запустить с watch режимом
-npm run test:watch
-
-# Получить покрытие кода
-npm run test:coverage
-```
-
-## 📝 API
+## API
 
 | Метод | Endpoint | Описание |
 |-------|----------|----------|
-| POST | /api/track | Трекинг посетителя |
-| POST | /api/login | Вход администратора |
-| GET | /api/stats | Статистика |
-| GET | /api/visitors | Все посетители |
-| GET | /api/export/csv | Экспорт CSV |
-| GET | /api/export/json | Экспорт JSON |
-| DELETE | /api/visitors | Очистить данные |
-| POST | /api/change-password | Смена пароля |
+| POST | `/api/track` | Трекинг посетителя |
+| POST | `/api/login` | Вход администратора |
+| GET | `/api/stats` | Статистика |
+| GET | `/api/visitors` | Все посетители |
+| GET | `/api/export/csv` | Экспорт CSV |
+| GET | `/api/export/json` | Экспорт JSON |
+| DELETE | `/api/visitors` | Очистить данные |
+| POST | `/api/change-password` | Смена пароля |
 
-## 🛡️ Защита данных
+## Лицензия
 
-### PostgreSQL (Railway)
-Данные хранятся в PostgreSQL базе данных.
+MIT — см. [LICENSE](LICENSE)
 
-### Redis (Vercel)
-Для Vercel используется Redis через `@vercel/kv`.
+## Автор
 
-## 🎨 Темы
-
-### Тёмная тема (по умолчанию)
-- Градиентный фон с анимацией
-- Фиолетово-синяя палитра
-- Glassmorphism эффекты
-
-### Светлая тема
-- Светлый градиент
-- Улучшенная читаемость
-- Сохранение в localStorage
-
-## 🔄 Что нового в v2.0
-
-### Безопасность
-- ✅ Переменные окружения для пароля
-- ✅ Улучшенный rate limiting
-- ✅ CORS с белым списком
-
-### Производительность
-- ✅ Кэширование GitHub API (1 час)
-- ✅ Skeleton loader для репозиториев
-- ✅ Оптимизированные запросы
-
-### Дизайн
-- ✅ Новый градиентный фон
-- ✅ Анимированные карточки
-- ✅ Улучшенные hover эффекты
-- ✅ Плавные переходы
-
-### Тестирование
-- ✅ Jest тесты для API
-- ✅ Конфигурация покрытия
-
-## 📄 Лицензия
-
-MIT License - см. файл [LICENSE](LICENSE)
-
-## 👤 Автор
-
-**Nobame**
-- GitHub: [@Benqxc](https://github.com/Benqxc)
-- Telegram: [@benqxc](https://t.me/benqxc)
+**[_ud2](https://github.com/Benqxc)** · [@Benqxc](https://github.com/Benqxc) · [Telegram](https://t.me/benqxc)
